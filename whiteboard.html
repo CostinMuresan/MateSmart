@@ -37,6 +37,7 @@ body{
 .btn[aria-pressed="true"]{background:#ffd447;color:#1d2b4f}
 .btn[disabled]{opacity:.4;cursor:default}
 .btn.primary{background:var(--ink);color:var(--paper)}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
 .btn.danger{border-color:var(--bad);color:var(--bad)}
 .sep{width:3px;align-self:stretch;background:var(--line);border-radius:2px;margin:2px 2px}
 .sw{width:44px;height:44px;border-radius:50%;border:3px solid var(--ink);padding:0;cursor:pointer}
@@ -91,6 +92,7 @@ button:focus-visible,input:focus-visible{outline:4px solid #ffd447;outline-offse
 </aside>
 
 <div class="topbar" role="toolbar">
+  <a class="btn" href="index.html">🏠 Acasă</a>
   <div class="grp">
     <button class="btn" id="mSel" aria-pressed="true">Alege</button>
     <button class="btn" id="mPen" aria-pressed="false">Scrie</button>

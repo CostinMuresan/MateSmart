@@ -37,6 +37,7 @@ header h1{margin:0;font-size:24px;font-weight:800}
 .pill[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .btn{font:700 16px var(--font);min-height:44px;padding:0 14px;border-radius:10px;border:2px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer}
 .btn.primary{background:var(--ink);color:var(--paper)}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
 .btn.danger{border-color:var(--bad);color:var(--bad)}
 .btn.small{min-height:36px;padding:0 10px;font-size:15px}
 label{display:block;margin:10px 0 4px;font-weight:700}
@@ -77,6 +78,7 @@ dialog textarea{min-height:360px;font-family:ui-monospace,Menlo,Consolas,monospa
 <header>
   <h1>Administrare probleme</h1>
   <div class="list">
+    <a class="btn" href="index.html">🏠 Acasă</a>
     <span id="saved"></span>
     <button class="btn" id="bTema"></button>
     <button class="btn" id="bImport">Încarcă probleme.js</button>
