@@ -32,7 +32,7 @@ const SC = (() => {
   function ext(e) {
     if (e.t === "seg") return horiz(e) ? { x1: e.x, y1: e.y, x2: e.x + e.len, y2: e.y + G } : { x1: e.x, y1: e.y, x2: e.x + G, y2: e.y + e.len };
     if (e.t === "lin") return horiz(e) ? { x1: e.x, y1: e.y, x2: e.x + e.len, y2: e.y } : { x1: e.x, y1: e.y, x2: e.x, y2: e.y + e.len };
-    if (e.t === "acol") return { x1: e.x, y1: e.y, x2: e.x + e.len, y2: e.y + B };
+    if (e.t === "acol") return horiz(e) ? { x1: e.x, y1: e.y, x2: e.x + e.len, y2: e.y + B } : { x1: e.x, y1: e.y, x2: e.x + B, y2: e.y + e.len };
     if (e.t === "txt") { const s = e.s || 48, w = Math.max(1, String(e.l || "?").length) * s * .62; return { x1: e.x - w / 2, y1: e.y - s * .7, x2: e.x + w / 2, y2: e.y + s * .45 }; }
     if (e.t === "ink") { const xs = e.pts.map(p => p[0]), ys = e.pts.map(p => p[1]); return { x1: Math.min(...xs), y1: Math.min(...ys), x2: Math.max(...xs), y2: Math.max(...ys) }; }
     return { x1: 0, y1: 0, x2: 0, y2: 0 };
@@ -76,6 +76,7 @@ const SC = (() => {
   }
   function rotate(e) {
     if (e.t === "seg") { const cx = horiz(e) ? e.x + e.len / 2 : e.x + G / 2, cy = horiz(e) ? e.y + G / 2 : e.y + e.len / 2; e.o = horiz(e) ? "v" : "h"; if (horiz(e)) { e.x = cx - e.len / 2; e.y = cy - G / 2; } else { e.x = cx - G / 2; e.y = cy - e.len / 2; } }
+    else if (e.t === "acol") { const cx = horiz(e) ? e.x + e.len / 2 : e.x + B / 2, cy = horiz(e) ? e.y + B / 2 : e.y + e.len / 2; e.o = horiz(e) ? "v" : "h"; if (horiz(e)) { e.x = cx - e.len / 2; e.y = cy - B / 2; } else { e.x = cx - B / 2; e.y = cy - e.len / 2; } }
     else if (e.t === "lin") { const cx = horiz(e) ? e.x + e.len / 2 : e.x, cy = horiz(e) ? e.y : e.y + e.len / 2; e.o = horiz(e) ? "v" : "h"; if (horiz(e)) { e.x = cx - e.len / 2; e.y = cy; } else { e.x = cx; e.y = cy - e.len / 2; } }
     const b = ext(e); if (b.x1 < 0) e.x -= b.x1; if (b.y1 < 0) e.y -= b.y1; if (b.x2 > W) e.x -= b.x2 - W; if (b.y2 > H) e.y -= b.y2 - H;
   }
@@ -84,17 +85,26 @@ const SC = (() => {
     if (t === "seg") return { id, t, x, y, len: 4 * U, o: "h", c, l: "" };
     if (t === "lin") return { id, t, x, y, len: 6 * U, o: "h", c: "ink", dash: false };
     if (t === "ldot") return { id, t: "lin", x, y, len: 6 * U, o: "h", c: "ink", dash: true };
-    if (t === "acol") return { id, t, x, y, len: 6 * U, l: "?", f: false, c: "ink" };
+    if (t === "acol") return { id, t, x, y, len: 6 * U, o: "h", l: "?", f: false, c: "ink" };
     return { id, t: "txt", x: x + 80, y: y + 30, s: 56, c: "ink", l: "?" };
   }
 
   /* ---------- desenare (SVG) ---------- */
   function brace(e) {
-    const x = e.x, x2 = e.x + e.len, mx = (x + x2) / 2, y0 = e.y, yb = e.y + B, ym = e.y + B / 2, r = Math.min(26, e.len / 4);
-    const d = `M${x} ${yb}Q${x} ${ym} ${x + r} ${ym}L${mx - r} ${ym}Q${mx} ${ym} ${mx} ${y0}Q${mx} ${ym} ${mx + r} ${ym}L${x2 - r} ${ym}Q${x2} ${ym} ${x2} ${yb}`;
-    const tr = e.f ? ` transform="translate(0 ${2 * e.y + B}) scale(1 -1)"` : "";
-    const ty = e.f ? e.y + B + 36 : e.y - 12;
-    return `<g class="el" data-id="${e.id}"><path d="${d}"${tr} style="fill:none;stroke:${colA(e.c)}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}"${tr} style="fill:none;stroke:transparent" stroke-width="40"/><text x="${mx}" y="${ty}" text-anchor="middle" font-size="36" font-weight="800" style="fill:${colA(e.c)};font-family:'Baloo 2',sans-serif">${esc(e.l)}</text></g>`;
+    const col = colA(e.c), f = "font-weight:800;font-family:'Baloo 2',sans-serif;pointer-events:none";
+    if (horiz(e)) {
+      const x = e.x, x2 = e.x + e.len, mx = (x + x2) / 2, y0 = e.y, yb = e.y + B, ym = e.y + B / 2, r = Math.min(26, e.len / 4);
+      const d = `M${x} ${yb}Q${x} ${ym} ${x + r} ${ym}L${mx - r} ${ym}Q${mx} ${ym} ${mx} ${y0}Q${mx} ${ym} ${mx + r} ${ym}L${x2 - r} ${ym}Q${x2} ${ym} ${x2} ${yb}`;
+      const tr = e.f ? ` transform="translate(0 ${2 * e.y + B}) scale(1 -1)"` : "";
+      const ty = e.f ? e.y + B + 36 : e.y - 12;
+      return `<g class="el" data-id="${e.id}"><path d="${d}"${tr} style="fill:none;stroke:${col}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}"${tr} style="fill:none;stroke:transparent" stroke-width="40"/><text x="${mx}" y="${ty}" text-anchor="middle" font-size="36" style="fill:${col};${f}">${esc(e.l)}</text></g>`;
+    }
+    /* verticală: neîntoarsă = vârful spre stânga ( { ), întoarsă = vârful spre dreapta ( } ) */
+    const y = e.y, y2 = e.y + e.len, my = (y + y2) / 2, x0 = e.x, xb = e.x + B, xm = e.x + B / 2, r = Math.min(26, e.len / 4);
+    const d = `M${xb} ${y}Q${xm} ${y} ${xm} ${y + r}L${xm} ${my - r}Q${xm} ${my} ${x0} ${my}Q${xm} ${my} ${xm} ${my + r}L${xm} ${y2 - r}Q${xm} ${y2} ${xb} ${y2}`;
+    const tr = e.f ? ` transform="translate(${2 * e.x + B} 0) scale(-1 1)"` : "";
+    const tx = e.f ? e.x + B + 14 : e.x - 14, an = e.f ? "start" : "end";
+    return `<g class="el" data-id="${e.id}"><path d="${d}"${tr} style="fill:none;stroke:${col}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}"${tr} style="fill:none;stroke:transparent" stroke-width="40"/><text x="${tx}" y="${my}" text-anchor="${an}" dominant-baseline="central" font-size="36" style="fill:${col};${f}">${esc(e.l)}</text></g>`;
   }
   function desen(e) {
     if (e.t === "seg") {
