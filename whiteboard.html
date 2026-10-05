@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Whiteboard – segmente</title>
+<script src="tema.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -57,6 +58,13 @@ svg#cv.mode-erase .ink{pointer-events:stroke}
 .kp{display:flex;flex-wrap:wrap;gap:4px;max-width:340px;justify-content:center}
 .k{width:46px;height:46px;border-radius:10px;border:3px solid var(--ink);background:var(--paper);color:var(--ink);font:800 20px var(--font);cursor:pointer;padding:0}
 .len{font:700 17px var(--font);min-width:92px;text-align:center}
+.colors{display:flex;flex-wrap:wrap;gap:5px;max-width:330px;justify-content:center;align-items:center}
+.colors .sw{width:36px;height:36px;border-width:2px}
+.colors .sep2{flex-basis:100%;height:0}
+.swc{position:relative;display:inline-block;width:36px;height:36px;border-radius:50%;border:2px solid var(--ink);background:conic-gradient(#e4202d,#f2d024,#1f9d55,#2bb5c9,#1f4fd8,#c2418b,#e4202d);cursor:pointer;overflow:hidden}
+.swc.big{width:44px;height:44px;border-width:3px}
+.swc input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);opacity:0;cursor:pointer;border:0;padding:0}
+.panel{max-height:62vh;overflow:auto}
 .hintbar{position:absolute;left:12px;top:10px;font:600 16px var(--font);color:var(--muted);pointer-events:none;background:color-mix(in srgb,var(--paper) 85%,transparent);padding:2px 8px;border-radius:8px}
 dialog{width:min(820px,94vw);border:3px solid var(--ink);border-radius:16px;background:var(--panel);color:var(--ink);padding:16px}
 dialog::backdrop{background:rgba(0,0,0,.45)}
@@ -89,15 +97,18 @@ button:focus-visible,input:focus-visible{outline:4px solid #ffd447;outline-offse
     <button class="btn" id="mErase" aria-pressed="false">Radieră</button>
   </div>
   <div class="grp" id="penCols" role="radiogroup" aria-label="Culoare creion"></div>
+  <label class="swc big" title="Altă culoare pentru creion"><input type="color" id="penCustom" value="#7a5cc7" aria-label="Altă culoare pentru creion"></label>
   <span class="sep"></span>
   <div class="grp">
     <button class="btn" id="bUndo" aria-label="Înapoi">↶</button>
     <button class="btn" id="bRedo" aria-label="Înainte">↷</button>
   </div>
   <label class="chk"><input type="checkbox" id="cGrid" checked> Grilă</label>
+  <label class="chk" title="Segmentele se pot lungi cu orice lungime, fără pași pe pătrățele"><input type="checkbox" id="cFree"> Lungime liberă</label>
   <span class="sep"></span>
   <button class="btn" id="bSave">Salvează / Încarcă</button>
   <button class="btn danger" id="bClear">Șterge tot</button>
+  <button class="btn" id="bTema"></button>
 </div>
 
 <main class="stage">
@@ -125,8 +136,17 @@ const KEY = "matematica.scena.v1";
 const $ = id => document.getElementById(id);
 const svg = $("cv");
 const U = SC.U;
-let S, sel = null, mode = "sel", pen = "#111111", grid = true, hist = [], hi = -1, drag = null, guides = null, stroke = null, ultC = SC.CULORI[0][0];
-const PENS = ["#111111", "#e4202d", "#1f4fd8", "#1f9d55"];
+let S, sel = null, mode = "sel", pen = "ink", grid = true, hist = [], hi = -1, drag = null, guides = null, stroke = null, ultC = SC.CULORI[0][0];
+const PENS = ["ink", "#e4202d", "#1f4fd8", "#1f9d55"];
+let free = false;
+const PKEY = "matematica.scena.pref";
+let pref = { recent: [], free: false, grid: true };
+try { const q = JSON.parse(localStorage.getItem(PKEY)); if (q && typeof q === "object") pref = { ...pref, ...q }; } catch (e) {}
+const savePref = () => { pref.free = free; pref.grid = grid; try { localStorage.setItem(PKEY, JSON.stringify(pref)); } catch (e) {} };
+function addRecent(c) {
+  if (!/^#[0-9a-f]{6}$/i.test(c) || SC.CULORI.some(x => x[0].toLowerCase() === c.toLowerCase())) return;
+  pref.recent = [c, ...pref.recent.filter(x => x.toLowerCase() !== c.toLowerCase())].slice(0, 8); savePref();
+}
 const get = id => S.elemente.find(e => e.id === id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -169,12 +189,16 @@ function renderPanel() {
   const p = $("panel"), e = get(sel);
   if (!e || e.t === "ink") { p.hidden = true; return; }
   p.hidden = false;
-  const cols = SC.CULORI.map(([c, n]) => `<button class="sw${e.c === c ? " on" : ""}" data-a="col" data-c="${c}" style="background:${c}" aria-label="${n}"></button>`).join("");
+  const on = c => String(e.c || "").toLowerCase() === c.toLowerCase() || (c === "ink" && e.t !== "seg" && SC.isInk(e.c));
+  const sw = (c, n) => `<button class="sw${on(c) ? " on" : ""}" data-a="col" data-c="${c}" style="background:${c === "ink" ? "var(--ink)" : c}" aria-label="${n}" title="${n}"></button>`;
+  const cur = /^#[0-9a-f]{6}$/i.test(e.c || "") ? e.c : "#3f6fd1";
+  const cols = SC.CULORI.map(([c, n]) => sw(c, n)).join("") + `<label class="swc" title="Orice altă culoare"><input type="color" id="colCustom" value="${cur}" aria-label="Altă culoare"></label>`
+    + (pref.recent.length ? `<span class="sep2"></span>` + pref.recent.map(c => sw(c, "Culoare salvată " + c)).join("") : "");
   const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "?", "+", "=", "−", "⌫"].map(k => `<button class="k" data-a="key" data-k="${k}">${k}</button>`).join("");
-  const lenCtl = (e.t === "seg" || e.t === "lin" || e.t === "acol") ? `<div class="grp"><button class="btn" data-a="len" data-d="-1" aria-label="Mai scurt">−</button><span class="len">${Math.round(e.len / U * 10) / 10} unități</span><button class="btn" data-a="len" data-d="1" aria-label="Mai lung">+</button></div>` : "";
+  const lenCtl = (e.t === "seg" || e.t === "lin" || e.t === "acol") ? `<div class="grp"><button class="btn" data-a="len" data-d="-1" aria-label="Mai scurt">−</button><span class="len">${Math.round(e.len / U * 100) / 100} unități</span><button class="btn" data-a="len" data-d="1" aria-label="Mai lung">+</button></div>` : "";
   const sizeCtl = e.t === "txt" ? `<div class="grp"><button class="btn" data-a="size" data-d="-8" aria-label="Mai mic">A−</button><button class="btn" data-a="size" data-d="8" aria-label="Mai mare">A+</button></div>` : "";
   const label = (e.t === "seg" || e.t === "acol" || e.t === "txt") ? `<div class="grp" style="flex-direction:column"><input type="text" id="lbl" maxlength="10" value="${SC.esc(e.l)}" placeholder="etichetă" aria-label="Etichetă"><div class="kp">${keys}</div></div>` : "";
-  const colors = e.t === "acol" ? "" : `<div class="grp" style="flex-wrap:wrap;max-width:220px;justify-content:center">${cols}</div>`;
+  const colors = `<div class="colors">${cols}</div>`;
   const extra = (e.t === "seg" || e.t === "lin") ? `<button class="btn" data-a="rot">⟳ Rotește</button>` : "";
   const dash = e.t === "lin" ? `<button class="btn" data-a="dash" aria-pressed="${!!e.dash}">${e.dash ? "Punctată" : "Continuă"}</button>` : "";
   const flip = e.t === "acol" ? `<button class="btn" data-a="flip">⇅ Răstoarnă</button>` : "";
@@ -185,7 +209,7 @@ $("panel").addEventListener("click", ev => {
   const e = get(sel); if (!e) return; const a = b.dataset.a;
   if (a === "col") { e.c = b.dataset.c; if (e.t === "seg") ultC = e.c; }
   else if (a === "key") { const k = b.dataset.k; e.l = k === "⌫" ? (e.l || "").slice(0, -1) : ((e.l || "") + k).slice(0, 10); }
-  else if (a === "len") { const d = +b.dataset.d, ax = SC.horiz(e) ? "x" : "y", lim = ax === "x" ? SC.W : SC.H; e.len = clamp(e.len + d * U, U, lim - e[ax]); }
+  else if (a === "len") { const d = +b.dataset.d, ax = SC.horiz(e) ? "x" : "y", lim = ax === "x" ? SC.W : SC.H; e.len = clamp(e.len + d * (free ? U / 4 : U), free ? 10 : U, lim - e[ax]); }
   else if (a === "size") e.s = clamp((e.s || 56) + (+b.dataset.d), 24, 160);
   else if (a === "rot") SC.rotate(e);
   else if (a === "dash") e.dash = !e.dash;
@@ -195,10 +219,15 @@ $("panel").addEventListener("click", ev => {
   commit(); renderSvg(); renderPanel();
 });
 $("panel").addEventListener("input", ev => {
-  if (ev.target.id !== "lbl") return; const e = get(sel); if (!e) return;
-  e.l = ev.target.value; renderSvg();
+  const e = get(sel); if (!e) return;
+  if (ev.target.id === "lbl") { e.l = ev.target.value; renderSvg(); }
+  else if (ev.target.id === "colCustom") { e.c = ev.target.value; if (e.t === "seg") ultC = e.c; renderSvg(); }
 });
-$("panel").addEventListener("change", ev => { if (ev.target.id === "lbl") commit(); });
+$("panel").addEventListener("change", ev => {
+  const e = get(sel);
+  if (ev.target.id === "lbl") commit();
+  else if (ev.target.id === "colCustom" && e) { addRecent(e.c); commit(); renderPanel(); }
+});
 
 /* ---------- adăugare elemente: atingere SAU tragere de pe paletă pe tablă ---------- */
 const HINT_EL = "Trage de mijlocul elementului ca să-l muți și de capete ca să-l lungești.";
@@ -284,7 +313,8 @@ svg.addEventListener("pointermove", e => {
     el.x = Math.round(r.x); el.y = Math.round(r.y); guides = { gx: r.gx, gy: r.gy }; renderSvg();
   } else if (drag.k === "resize") {
     drag.moved = true;
-    const r = SC.snapEnd(el, SC.horiz(el) ? p.x : p.y, others(), grid);
+    const raw = SC.horiz(el) ? p.x : p.y;
+    const r = free ? { pos: raw, g: null, ax: SC.horiz(el) ? "x" : "y" } : SC.snapEnd(el, raw, others(), grid);
     SC.resize(el, drag.end, Math.round(r.pos));
     guides = r.ax === "x" ? { gx: r.g, gy: null } : { gx: null, gy: r.g }; renderSvg();
   }
@@ -312,10 +342,12 @@ function setMode(m) {
 }
 $("mSel").onclick = () => setMode("sel"); $("mPen").onclick = () => setMode("pen"); $("mErase").onclick = () => setMode("erase");
 function renderPens() {
-  $("penCols").innerHTML = PENS.map(c => `<button class="sw${c === pen ? " on" : ""}" data-c="${c}" style="background:${c}" aria-label="Creion ${c}"></button>`).join("");
+  $("penCols").innerHTML = PENS.map(c => `<button class="sw${c === pen ? " on" : ""}" data-c="${c}" style="background:${c === "ink" ? "var(--ink)" : c}" aria-label="Creion ${c === "ink" ? "automat" : c}"></button>`).join("");
 }
 $("penCols").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (b) { pen = b.dataset.c; if (mode !== "pen") setMode("pen"); renderPens(); } });
-$("cGrid").onchange = e => { grid = e.target.checked; renderSvg(); };
+$("cGrid").onchange = e => { grid = e.target.checked; savePref(); renderSvg(); };
+$("cFree").onchange = e => { free = e.target.checked; savePref(); renderPanel(); $("hint").textContent = free ? "Lungime liberă: segmentele se pot lungi cu orice lungime." : HINT_EL; };
+$("penCustom").addEventListener("input", e => { pen = e.target.value; if (mode !== "pen") setMode("pen"); renderPens(); });
 $("bClear").onclick = () => { if (!S.elemente.length || confirm("Ștergeți tot de pe tablă?")) { S.elemente = []; sel = null; commit(); renderAll(); } };
 
 /* ---------- exemplu: problema cu Ana și Camelia ---------- */
@@ -361,6 +393,7 @@ function renderAll() { renderSvg(); renderPanel(); }
 /* ---------- pornire ---------- */
 try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.format === "scena" && Array.isArray(d.elemente)) S = d; } catch (e) {}
 if (!S) S = SC.nou();
+grid = pref.grid !== false; free = !!pref.free; $("cGrid").checked = grid; $("cFree").checked = free;
 renderPens(); commit(); renderAll();
 </script>
 </body>

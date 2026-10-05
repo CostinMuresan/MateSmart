@@ -15,6 +15,7 @@ Aplicație pentru tabla Smart, cu trei părți:
 | `tipuri.js` | Tipurile de probleme (metodele de rezolvare) |
 | `motor.js` | Partea comună pentru probleme: desenele pașilor, calcule |
 | `scena.js` | Formatul de scenă și elementele grafice ale whiteboardului |
+| `tema.js` | Comutatorul de temă (automat / luminos / întunecat), comun tuturor paginilor |
 | `.nojekyll` | Fișier gol, cerut de GitHub Pages |
 
 Toate fișierele trebuie să stea în același folder.

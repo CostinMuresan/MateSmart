@@ -13,10 +13,15 @@
    ============================================================ */
 const SC = (() => {
   const W = 1600, H = 900, U = 40, G = 56, B = 36, T = 18;
-  const CULORI = [["#3f6fd1", "Albastru"], ["#e4572e", "Roșu"], ["#2a9d8f", "Verde"], ["#e09f1f", "Galben"], ["#7a5cc7", "Mov"], ["#c2418b", "Roz"], ["#6b7280", "Gri"], ["#ffffff", "Alb"]];
+  const CULORI = [["#e4202d", "Roșu"], ["#e4572e", "Roșu-portocaliu"], ["#f28c28", "Portocaliu"], ["#e09f1f", "Chihlimbar"], ["#f2d024", "Galben"], ["#9acd32", "Verde deschis"], ["#1f9d55", "Verde"], ["#0e7c3a", "Verde închis"], ["#2a9d8f", "Turcoaz"], ["#2bb5c9", "Cyan"], ["#3f6fd1", "Albastru"], ["#1f4fd8", "Albastru intens"], ["#7a5cc7", "Mov"], ["#9b3fb5", "Violet"], ["#c2418b", "Roz"], ["#f58fb1", "Roz deschis"], ["#8b5a2b", "Maro"], ["#6b7280", "Gri"], ["#bcd7f5", "Albastru pal"], ["#c8e6c9", "Verde pal"], ["#ffe0a3", "Galben pal"], ["#f8c9c4", "Roșu pal"], ["#d9d2f2", "Mov pal"], ["#ffffff", "Alb"], ["ink", "Automat (negru pe luminos, alb pe întunecat)"]];
   const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const lum = c => { const m = /^#([0-9a-f]{6})$/i.exec(c); if (!m) return 0; const v = parseInt(m[1], 16); return (0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255)) / 255; };
-  const txtCol = c => lum(c) > .62 ? "#1d2b4f" : "#ffffff";
+  const INK = "var(--ink,#1d2b4f)";
+  /* „ink" = culoarea textului temei; scrisul și liniile vechi (negru / bleumarin) se adaptează și ele */
+  const isInk = c => !c || c === "ink" || c === "#1d2b4f" || c === "#111111";
+  const colA = c => isInk(c) ? INK : c;
+  const segFill = c => c === "ink" ? INK : c;
+  const txtCol = c => c === "ink" ? "var(--paper,#f6fbff)" : (lum(c) > .62 ? "#1d2b4f" : "#ffffff");
   const horiz = e => e.o !== "v";
   let nid = 0;
   const newId = () => "e" + Date.now().toString(36) + (nid++).toString(36);
@@ -76,10 +81,10 @@ const SC = (() => {
   function elNou(t, n, c) {
     const x = 120 + (n % 6) * U, y = 120 + (n % 8) * 80, id = newId();
     if (t === "seg") return { id, t, x, y, len: 4 * U, o: "h", c, l: "" };
-    if (t === "lin") return { id, t, x, y, len: 6 * U, o: "h", c: "#1d2b4f", dash: false };
-    if (t === "ldot") return { id, t: "lin", x, y, len: 6 * U, o: "h", c: "#1d2b4f", dash: true };
-    if (t === "acol") return { id, t, x, y, len: 6 * U, l: "?", f: false };
-    return { id, t: "txt", x: x + 80, y: y + 30, s: 56, c: "#1d2b4f", l: "?" };
+    if (t === "lin") return { id, t, x, y, len: 6 * U, o: "h", c: "ink", dash: false };
+    if (t === "ldot") return { id, t: "lin", x, y, len: 6 * U, o: "h", c: "ink", dash: true };
+    if (t === "acol") return { id, t, x, y, len: 6 * U, l: "?", f: false, c: "ink" };
+    return { id, t: "txt", x: x + 80, y: y + 30, s: 56, c: "ink", l: "?" };
   }
 
   /* ---------- desenare (SVG) ---------- */
@@ -88,23 +93,23 @@ const SC = (() => {
     const d = `M${x} ${yb}Q${x} ${ym} ${x + r} ${ym}L${mx - r} ${ym}Q${mx} ${ym} ${mx} ${y0}Q${mx} ${ym} ${mx + r} ${ym}L${x2 - r} ${ym}Q${x2} ${ym} ${x2} ${yb}`;
     const tr = e.f ? ` transform="translate(0 ${2 * e.y + B}) scale(1 -1)"` : "";
     const ty = e.f ? e.y + B + 36 : e.y - 12;
-    return `<g class="el" data-id="${e.id}"><path d="${d}"${tr} style="fill:none;stroke:#1d2b4f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}"${tr} style="fill:none;stroke:transparent" stroke-width="40"/><text x="${mx}" y="${ty}" text-anchor="middle" font-size="36" font-weight="800" style="fill:#1d2b4f;font-family:'Baloo 2',sans-serif">${esc(e.l)}</text></g>`;
+    return `<g class="el" data-id="${e.id}"><path d="${d}"${tr} style="fill:none;stroke:${colA(e.c)}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}"${tr} style="fill:none;stroke:transparent" stroke-width="40"/><text x="${mx}" y="${ty}" text-anchor="middle" font-size="36" font-weight="800" style="fill:${colA(e.c)};font-family:'Baloo 2',sans-serif">${esc(e.l)}</text></g>`;
   }
   function desen(e) {
     if (e.t === "seg") {
       const b = ext(e), cx = (b.x1 + b.x2) / 2, cy = (b.y1 + b.y2) / 2;
-      return `<g class="el" data-id="${e.id}"><rect x="${b.x1}" y="${b.y1}" width="${b.x2 - b.x1}" height="${b.y2 - b.y1}" rx="6" style="fill:${e.c};stroke:#1d2b4f" stroke-width="3"/><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="32" font-weight="800" style="fill:${txtCol(e.c)};font-family:'Baloo 2',sans-serif;pointer-events:none">${esc(e.l)}</text></g>`;
+      return `<g class="el" data-id="${e.id}"><rect x="${b.x1}" y="${b.y1}" width="${b.x2 - b.x1}" height="${b.y2 - b.y1}" rx="6" style="fill:${segFill(e.c)};stroke:${INK}" stroke-width="3"/><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="32" font-weight="800" style="fill:${txtCol(e.c)};font-family:'Baloo 2',sans-serif;pointer-events:none">${esc(e.l)}</text></g>`;
     }
     if (e.t === "lin") {
       const b = ext(e);
-      return `<g class="el" data-id="${e.id}"><line x1="${b.x1}" y1="${b.y1}" x2="${b.x2}" y2="${b.y2}" style="stroke:${e.c || "#1d2b4f"}" stroke-width="${e.dash ? 7 : 5}" stroke-linecap="round"${e.dash ? ' stroke-dasharray="1 16"' : ""}/><line x1="${b.x1}" y1="${b.y1}" x2="${b.x2}" y2="${b.y2}" style="stroke:transparent" stroke-width="40"/></g>`;
+      return `<g class="el" data-id="${e.id}"><line x1="${b.x1}" y1="${b.y1}" x2="${b.x2}" y2="${b.y2}" style="stroke:${colA(e.c)}" stroke-width="${e.dash ? 7 : 5}" stroke-linecap="round"${e.dash ? ' stroke-dasharray="1 16"' : ""}/><line x1="${b.x1}" y1="${b.y1}" x2="${b.x2}" y2="${b.y2}" style="stroke:transparent" stroke-width="40"/></g>`;
     }
     if (e.t === "acol") return brace(e);
     if (e.t === "txt") {
       const b = ext(e);
-      return `<g class="el" data-id="${e.id}"><rect x="${b.x1}" y="${b.y1}" width="${b.x2 - b.x1}" height="${b.y2 - b.y1}" style="fill:transparent"/><text x="${e.x}" y="${e.y}" text-anchor="middle" font-size="${e.s || 48}" font-weight="800" style="fill:${e.c || "#1d2b4f"};font-family:'Baloo 2',sans-serif;pointer-events:none">${esc(e.l)}</text></g>`;
+      return `<g class="el" data-id="${e.id}"><rect x="${b.x1}" y="${b.y1}" width="${b.x2 - b.x1}" height="${b.y2 - b.y1}" style="fill:transparent"/><text x="${e.x}" y="${e.y}" text-anchor="middle" font-size="${e.s || 48}" font-weight="800" style="fill:${colA(e.c)};font-family:'Baloo 2',sans-serif;pointer-events:none">${esc(e.l)}</text></g>`;
     }
-    if (e.t === "ink") return `<path class="ink" data-id="${e.id}" d="M${e.pts.map(p => p[0] + " " + p[1]).join("L")}" style="fill:none;stroke:${e.c}" stroke-width="${e.w || 6}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if (e.t === "ink") return `<path class="ink" data-id="${e.id}" d="M${e.pts.map(p => p[0] + " " + p[1]).join("L")}" style="fill:none;stroke:${colA(e.c)}" stroke-width="${e.w || 6}" stroke-linecap="round" stroke-linejoin="round"/>`;
     return "";
   }
   /* desenează o scenă întreagă, doar pentru afișare (explicații, previzualizări) */
@@ -112,5 +117,5 @@ const SC = (() => {
     const els = scena.elemente, ord = [...els.filter(e => e.t !== "ink"), ...els.filter(e => e.t === "ink")];
     return `<svg viewBox="0 0 ${scena.w || W} ${scena.h || H}" style="width:100%;height:auto;display:block">${o.fundal ? `<rect width="${W}" height="${H}" style="fill:${o.fundal}"/>` : ""}${ord.map(desen).join("")}</svg>`;
   }
-  return { W, H, U, G, B, T, CULORI, esc, txtCol, horiz, nou, ext, snapMove, snapEnd, resize, nearEnd, rotate, elNou, desen, svg, newId };
+  return { W, H, U, G, B, T, CULORI, esc, txtCol, isInk, horiz, nou, ext, snapMove, snapEnd, resize, nearEnd, rotate, elNou, desen, svg, newId };
 })();
