@@ -1,29 +1,34 @@
 # Matematică pe tablă – clasa a II-a
 
-Aplicație pentru tabla Smart: învățătorul prezintă probleme, copiii interacționează,
-iar explicația se rulează animat, cu voce.
+Aplicație pentru tabla Smart, cu trei părți:
+1. **Whiteboard** (`whiteboard.html`): tablă de desen cu segmente, linii, acolade, etichete și creion.
+2. **Rezolvarea problemelor** (`index.html`): probleme pe tipuri (metode), cu explicații animate și voce.
+3. **Administrare** (`admin.html`): crearea problemelor și exportul lui `probleme.js`.
 
 ## Fișiere
 | Fișier | Rol |
 |---|---|
-| `index.html` | Tabla pentru copii (aceasta este pagina principală) |
-| `admin.html` | Administrare: creați și editați probleme, exportați `probleme.js` |
+| `index.html` | Tabla pentru copii (pagina principală) |
+| `whiteboard.html` | Whiteboard cu elemente grafice (segmente etc.) |
+| `admin.html` | Administrare probleme |
 | `probleme.js` | Lista problemelor (se înlocuiește după fiecare export din administrare) |
-| `tipuri.js` | Cele 8 tipuri de probleme (metode de rezolvare) |
-| `motor.js` | Partea comună: desenele pașilor, calcule |
-| `.nojekyll` | Fișier gol, cerut de GitHub Pages ca să servească fișierele ca atare |
+| `tipuri.js` | Tipurile de probleme (metodele de rezolvare) |
+| `motor.js` | Partea comună pentru probleme: desenele pașilor, calcule |
+| `scena.js` | Formatul de scenă și elementele grafice ale whiteboardului |
+| `.nojekyll` | Fișier gol, cerut de GitHub Pages |
 
-Cele 5 fișiere (`index.html`, `admin.html`, `probleme.js`, `tipuri.js`, `motor.js`) trebuie să stea în același folder.
+Toate fișierele trebuie să stea în același folder.
 
 ## Publicare pe GitHub Pages
 1. Cont gratuit pe github.com.
-2. New repository → nume (ex: `matematica-tabla`) → **Public** → Create.
-3. Add file → Upload files → trageți fișierele din arhivă (inclusiv `.nojekyll`) → Commit changes.
-4. Settings → Pages → Build and deployment → Source: **Deploy from a branch** → Branch: `main`, folder `/ (root)` → Save.
-5. După 1–10 minute, aplicația este la: `https://NUME-UTILIZATOR.github.io/matematica-tabla/`
-   Administrarea este la: `.../admin.html`
+2. New repository, nume (ex: `matematica-tabla`), **Public**, Create.
+3. Add file, Upload files: trageți toate fișierele din arhivă (inclusiv `.nojekyll`), apoi Commit changes.
+4. Settings, Pages, Build and deployment: Source **Deploy from a branch**, Branch `main`, folder `/ (root)`, Save.
+5. După 1–10 minute: `https://NUME-UTILIZATOR.github.io/matematica-tabla/`
+   Whiteboard: `.../whiteboard.html` · Administrare: `.../admin.html`
 
-## Adăugarea de probleme noi
-1. Deschideți `.../admin.html`, creați problemele, apăsați **Exportă probleme.js** și copiați codul.
-2. În GitHub: deschideți `probleme.js` → creionul (Edit) → ștergeți tot, lipiți codul nou → Commit changes.
-3. După un minut, `index.html` afișează problemele noi.
+## Actualizarea problemelor
+Administrare, Exportă probleme.js, Copiază; în GitHub deschideți `probleme.js`, Edit (creionul), lipiți codul, Commit changes.
+
+## Whiteboard: scena
+Desenul de pe whiteboard se salvează ca JSON (butonul „Salvează / Încarcă"), într-un spațiu de 1600 × 900 de unități, independent de ecran. Se salvează și automat, în browserul curent.

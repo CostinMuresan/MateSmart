@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Whiteboard – segmente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  --paper:#f6fbff; --grid:#cfe3f4; --ink:#1d2b4f; --muted:#52638a;
+  --panel:#ffffff; --line:#b9cde4; --ok:#1f9d55; --bad:#d64545;
+  --font:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--paper:#16213a;--grid:#243556;--ink:#eef3ff;--muted:#a9b8d8;--panel:#1e2c4d;--line:#3b4f7a}
+}
+:root[data-theme="dark"]{--paper:#16213a;--grid:#243556;--ink:#eef3ff;--muted:#a9b8d8;--panel:#1e2c4d;--line:#3b4f7a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  font-family:var(--font);color:var(--ink);background:var(--paper);
+  display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+  user-select:none;-webkit-user-select:none;overflow:hidden;
+}
+.palette{grid-row:1/3;background:var(--panel);border-right:3px solid var(--ink);padding:10px 8px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.palette h2{margin:2px 4px 0;font-size:15px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.pb{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:3px solid var(--ink);border-radius:14px;background:var(--paper);color:var(--ink);font:700 16px/1.1 var(--font);cursor:pointer}
+.pb:active{transform:scale(.97)}
+.pb{touch-action:none}
+.pb svg{width:100%;height:34px}
+.topbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;background:var(--panel);border-bottom:3px solid var(--ink)}
+.btn{font:700 18px/1 var(--font);min-height:50px;padding:0 16px;border-radius:12px;border:3px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn[aria-pressed="true"]{background:#ffd447;color:#1d2b4f}
+.btn[disabled]{opacity:.4;cursor:default}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.sep{width:3px;align-self:stretch;background:var(--line);border-radius:2px;margin:2px 2px}
+.sw{width:44px;height:44px;border-radius:50%;border:3px solid var(--ink);padding:0;cursor:pointer}
+.sw.on{outline:4px solid #ffd447;outline-offset:2px}
+.grp{display:flex;gap:6px;align-items:center}
+label.chk{display:flex;gap:8px;align-items:center;font:700 18px var(--font);cursor:pointer}
+label.chk input{width:24px;height:24px}
+.stage{position:relative;min-height:0;min-width:0;display:grid}
+svg#cv{width:100%;height:100%;display:block;touch-action:none;cursor:default}
+svg#cv.mode-pen{cursor:crosshair}
+svg#cv.mode-erase{cursor:cell}
+svg#cv.mode-sel .ink{pointer-events:none}
+svg#cv.mode-pen .el,svg#cv.mode-erase .el{pointer-events:none}
+svg#cv.mode-erase .ink{pointer-events:stroke}
+.panel{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);max-width:calc(100% - 16px);background:var(--panel);border:3px solid var(--ink);border-radius:18px;padding:8px 10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.panel[hidden]{display:none}
+.panel .btn{min-height:46px;font-size:17px;padding:0 12px}
+.panel input[type=text]{font:700 22px var(--font);width:130px;height:46px;padding:0 10px;border-radius:10px;border:3px solid var(--ink);background:var(--paper);color:var(--ink);text-align:center}
+.kp{display:flex;flex-wrap:wrap;gap:4px;max-width:340px;justify-content:center}
+.k{width:46px;height:46px;border-radius:10px;border:3px solid var(--ink);background:var(--paper);color:var(--ink);font:800 20px var(--font);cursor:pointer;padding:0}
+.len{font:700 17px var(--font);min-width:92px;text-align:center}
+.hintbar{position:absolute;left:12px;top:10px;font:600 16px var(--font);color:var(--muted);pointer-events:none;background:color-mix(in srgb,var(--paper) 85%,transparent);padding:2px 8px;border-radius:8px}
+dialog{width:min(820px,94vw);border:3px solid var(--ink);border-radius:16px;background:var(--panel);color:var(--ink);padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog textarea{width:100%;min-height:300px;font:13px ui-monospace,Menlo,Consolas,monospace;border:2px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);padding:8px}
+button:focus-visible,input:focus-visible{outline:4px solid #ffd447;outline-offset:2px}
+@media (max-width:760px){
+  body{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr)}
+  .palette{grid-row:auto;flex-direction:row;border-right:0;border-bottom:3px solid var(--ink);overflow-x:auto}
+  .palette h2{display:none}
+  .pb{min-width:96px}
+}
+</style>
+</head>
+<body>
+<aside class="palette" aria-label="Elemente">
+  <h2>Elemente</h2>
+  <button class="pb" data-add="seg" title="Segment"><svg viewBox="0 0 100 34"><rect x="6" y="6" width="88" height="22" rx="4" fill="#3f6fd1" stroke="#1d2b4f" stroke-width="3"/></svg>Segment</button>
+  <button class="pb" data-add="lin"><svg viewBox="0 0 100 34"><line x1="8" y1="17" x2="92" y2="17" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>Linie</button>
+  <button class="pb" data-add="ldot"><svg viewBox="0 0 100 34"><line x1="8" y1="17" x2="92" y2="17" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-dasharray="1 12"/></svg>Linie punctată</button>
+  <button class="pb" data-add="acol"><svg viewBox="0 0 100 34"><path d="M6 28Q6 18 16 18L40 18Q50 18 50 6Q50 18 60 18L84 18Q94 18 94 28" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>Acoladă</button>
+  <button class="pb" data-add="txt"><svg viewBox="0 0 100 34"><text x="50" y="27" text-anchor="middle" font-size="28" font-weight="800" fill="currentColor">12 ?</text></svg>Etichetă</button>
+  <h2>Lecție</h2>
+  <button class="pb" id="bEx">Exemplu</button>
+</aside>
+
+<div class="topbar" role="toolbar">
+  <div class="grp">
+    <button class="btn" id="mSel" aria-pressed="true">Alege</button>
+    <button class="btn" id="mPen" aria-pressed="false">Scrie</button>
+    <button class="btn" id="mErase" aria-pressed="false">Radieră</button>
+  </div>
+  <div class="grp" id="penCols" role="radiogroup" aria-label="Culoare creion"></div>
+  <span class="sep"></span>
+  <div class="grp">
+    <button class="btn" id="bUndo" aria-label="Înapoi">↶</button>
+    <button class="btn" id="bRedo" aria-label="Înainte">↷</button>
+  </div>
+  <label class="chk"><input type="checkbox" id="cGrid" checked> Grilă</label>
+  <span class="sep"></span>
+  <button class="btn" id="bSave">Salvează / Încarcă</button>
+  <button class="btn danger" id="bClear">Șterge tot</button>
+</div>
+
+<main class="stage">
+  <svg id="cv" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Tabla de desen"></svg>
+  <div class="hintbar" id="hint">Atinge sau trage un element din stânga pe tablă.</div>
+  <div class="panel" id="panel" hidden></div>
+</main>
+
+<dialog id="dlg">
+  <h2 style="margin-top:0">Scena (JSON)</h2>
+  <p style="margin:0 0 8px;color:var(--muted)">Copiați codul ca să salvați scena sau lipiți un cod ca să o încărcați.</p>
+  <textarea id="dlgText" spellcheck="false"></textarea>
+  <div class="grp" style="margin-top:10px;flex-wrap:wrap">
+    <button class="btn primary" id="bCopy">Copiază</button>
+    <button class="btn" id="bDown">Descarcă fișierul</button>
+    <button class="btn" id="bLoad">Încarcă din text</button>
+    <button class="btn" id="bClose">Închide</button>
+  </div>
+  <p id="dlgMsg" style="color:var(--muted)"></p>
+</dialog>
+
+<script src="scena.js"></script>
+<script>
+const KEY = "matematica.scena.v1";
+const $ = id => document.getElementById(id);
+const svg = $("cv");
+const U = SC.U;
+let S, sel = null, mode = "sel", pen = "#111111", grid = true, hist = [], hi = -1, drag = null, guides = null, stroke = null, ultC = SC.CULORI[0][0];
+const PENS = ["#111111", "#e4202d", "#1f4fd8", "#1f9d55"];
+const get = id => S.elemente.find(e => e.id === id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ---------- istoric + salvare locală ---------- */
+function commit() {
+  const j = JSON.stringify(S);
+  if (hist[hi] === j) return;
+  hist = hist.slice(0, hi + 1); hist.push(j); if (hist.length > 80) hist.shift(); hi = hist.length - 1;
+  try { localStorage.setItem(KEY, j); } catch (e) {}
+  updUndo();
+}
+function restore() { S = JSON.parse(hist[hi]); if (!get(sel)) sel = null; try { localStorage.setItem(KEY, hist[hi]); } catch (e) {} updUndo(); renderAll(); }
+function updUndo() { $("bUndo").disabled = hi <= 0; $("bRedo").disabled = hi >= hist.length - 1; }
+$("bUndo").onclick = () => { if (hi > 0) { hi--; restore(); } };
+$("bRedo").onclick = () => { if (hi < hist.length - 1) { hi++; restore(); } };
+
+/* ---------- desenare ---------- */
+function selMarkup() {
+  const e = get(sel); if (!e || e.t === "ink") return "";
+  const b = SC.ext(e), pad = 8;
+  let h = `<rect x="${b.x1 - pad}" y="${b.y1 - pad}" width="${b.x2 - b.x1 + 2 * pad}" height="${b.y2 - b.y1 + 2 * pad}" rx="10" style="fill:none;stroke:#ffd447;pointer-events:none" stroke-width="5" stroke-dasharray="14 8"/>`;
+  if (e.t === "seg" || e.t === "lin" || e.t === "acol") {
+    const hz = SC.horiz(e), cx = (b.x1 + b.x2) / 2, cy = (b.y1 + b.y2) / 2;
+    const ends = hz ? [["a", b.x1, cy], ["b", b.x2, cy]] : [["a", cx, b.y1], ["b", cx, b.y2]];
+    ends.forEach(([k, x, y]) => { h += `<circle data-h="${k}" cx="${x}" cy="${y}" r="15" style="fill:#ffd447;stroke:#1d2b4f;cursor:ew-resize" stroke-width="4"/><circle data-h="${k}" cx="${x}" cy="${y}" r="34" style="fill:transparent"/>`; });
+  }
+  return h;
+}
+function renderSvg() {
+  const els = S.elemente, ord = [...els.filter(e => e.t !== "ink"), ...els.filter(e => e.t === "ink")];
+  const g = guides ? [guides.gx !== null && guides.gx !== undefined ? `<line x1="${guides.gx}" y1="0" x2="${guides.gx}" y2="${SC.H}" style="stroke:#e4202d" stroke-width="3" stroke-dasharray="10 8"/>` : "", guides.gy !== null && guides.gy !== undefined ? `<line x1="0" y1="${guides.gy}" x2="${SC.W}" y2="${guides.gy}" style="stroke:#e4202d" stroke-width="3" stroke-dasharray="10 8"/>` : ""].join("") : "";
+  svg.setAttribute("class", "mode-" + mode);
+  svg.innerHTML = `<defs><pattern id="gp" width="${U}" height="${U}" patternUnits="userSpaceOnUse"><path d="M${U} 0H0V${U}" style="fill:none;stroke:var(--grid)" stroke-width="2"/></pattern></defs>
+    <rect width="${SC.W}" height="${SC.H}" style="fill:var(--paper)"/>${grid ? `<rect width="${SC.W}" height="${SC.H}" style="fill:url(#gp)"/>` : ""}
+    ${ord.map(SC.desen).join("")}${g}${selMarkup()}`;
+}
+
+/* ---------- panou de proprietăți ---------- */
+function renderPanel() {
+  const p = $("panel"), e = get(sel);
+  if (!e || e.t === "ink") { p.hidden = true; return; }
+  p.hidden = false;
+  const cols = SC.CULORI.map(([c, n]) => `<button class="sw${e.c === c ? " on" : ""}" data-a="col" data-c="${c}" style="background:${c}" aria-label="${n}"></button>`).join("");
+  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "?", "+", "=", "−", "⌫"].map(k => `<button class="k" data-a="key" data-k="${k}">${k}</button>`).join("");
+  const lenCtl = (e.t === "seg" || e.t === "lin" || e.t === "acol") ? `<div class="grp"><button class="btn" data-a="len" data-d="-1" aria-label="Mai scurt">−</button><span class="len">${Math.round(e.len / U * 10) / 10} unități</span><button class="btn" data-a="len" data-d="1" aria-label="Mai lung">+</button></div>` : "";
+  const sizeCtl = e.t === "txt" ? `<div class="grp"><button class="btn" data-a="size" data-d="-8" aria-label="Mai mic">A−</button><button class="btn" data-a="size" data-d="8" aria-label="Mai mare">A+</button></div>` : "";
+  const label = (e.t === "seg" || e.t === "acol" || e.t === "txt") ? `<div class="grp" style="flex-direction:column"><input type="text" id="lbl" maxlength="10" value="${SC.esc(e.l)}" placeholder="etichetă" aria-label="Etichetă"><div class="kp">${keys}</div></div>` : "";
+  const colors = e.t === "acol" ? "" : `<div class="grp" style="flex-wrap:wrap;max-width:220px;justify-content:center">${cols}</div>`;
+  const extra = (e.t === "seg" || e.t === "lin") ? `<button class="btn" data-a="rot">⟳ Rotește</button>` : "";
+  const dash = e.t === "lin" ? `<button class="btn" data-a="dash" aria-pressed="${!!e.dash}">${e.dash ? "Punctată" : "Continuă"}</button>` : "";
+  const flip = e.t === "acol" ? `<button class="btn" data-a="flip">⇅ Răstoarnă</button>` : "";
+  p.innerHTML = `${colors}${label}${lenCtl}${sizeCtl}${extra}${dash}${flip}<button class="btn" data-a="dup">Duplică</button><button class="btn danger" data-a="del">Șterge</button>`;
+}
+$("panel").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-a]"); if (!b) return;
+  const e = get(sel); if (!e) return; const a = b.dataset.a;
+  if (a === "col") { e.c = b.dataset.c; if (e.t === "seg") ultC = e.c; }
+  else if (a === "key") { const k = b.dataset.k; e.l = k === "⌫" ? (e.l || "").slice(0, -1) : ((e.l || "") + k).slice(0, 10); }
+  else if (a === "len") { const d = +b.dataset.d, ax = SC.horiz(e) ? "x" : "y", lim = ax === "x" ? SC.W : SC.H; e.len = clamp(e.len + d * U, U, lim - e[ax]); }
+  else if (a === "size") e.s = clamp((e.s || 56) + (+b.dataset.d), 24, 160);
+  else if (a === "rot") SC.rotate(e);
+  else if (a === "dash") e.dash = !e.dash;
+  else if (a === "flip") e.f = !e.f;
+  else if (a === "dup") { const c = JSON.parse(JSON.stringify(e)); c.id = SC.newId(); c.x = clamp(c.x + U, 0, SC.W - 40); c.y = clamp(c.y + U, 0, SC.H - 40); S.elemente.push(c); sel = c.id; }
+  else if (a === "del") { S.elemente = S.elemente.filter(x => x.id !== sel); sel = null; }
+  commit(); renderSvg(); renderPanel();
+});
+$("panel").addEventListener("input", ev => {
+  if (ev.target.id !== "lbl") return; const e = get(sel); if (!e) return;
+  e.l = ev.target.value; renderSvg();
+});
+$("panel").addEventListener("change", ev => { if (ev.target.id === "lbl") commit(); });
+
+/* ---------- adăugare elemente: atingere SAU tragere de pe paletă pe tablă ---------- */
+const HINT_EL = "Trage de mijlocul elementului ca să-l muți și de capete ca să-l lungești.";
+function adauga(tip, p) {
+  setMode("sel");
+  const e = SC.elNou(tip, S.elemente.length, ultC);
+  if (p) {
+    const b = SC.ext(e), r = SC.snapMove(e, e.x + (p.x - (b.x1 + b.x2) / 2), e.y + (p.y - (b.y1 + b.y2) / 2), S.elemente, grid);
+    e.x = Math.round(r.x); e.y = Math.round(r.y);
+  }
+  S.elemente.push(e); sel = e.id; commit(); renderAll();
+  $("hint").textContent = HINT_EL;
+}
+let pdrag = null, supClick = false;
+document.querySelectorAll("[data-add]").forEach(b => {
+  b.addEventListener("pointerdown", e => { pdrag = { b, x0: e.clientX, y0: e.clientY, moved: false, ghost: null }; b.setPointerCapture(e.pointerId); });
+  b.addEventListener("pointermove", e => {
+    if (!pdrag || pdrag.b !== b) return;
+    if (!pdrag.moved && Math.hypot(e.clientX - pdrag.x0, e.clientY - pdrag.y0) > 10) {
+      pdrag.moved = true;
+      const g = document.createElement("div"); g.className = "pb"; g.innerHTML = b.innerHTML;
+      g.style.cssText = "position:fixed;z-index:60;pointer-events:none;width:120px;opacity:.9;box-shadow:0 10px 24px rgba(0,0,0,.25)";
+      document.body.appendChild(g); pdrag.ghost = g;
+    }
+    if (pdrag.moved) { pdrag.ghost.style.left = (e.clientX - 60) + "px"; pdrag.ghost.style.top = (e.clientY - 30) + "px"; }
+  });
+  const fin = e => {
+    if (!pdrag || pdrag.b !== b) return;
+    const d = pdrag; pdrag = null;
+    if (d.ghost) d.ghost.remove();
+    if (d.moved) {
+      supClick = true; setTimeout(() => { supClick = false; }, 400);
+      const r = svg.getBoundingClientRect();
+      if (e.type === "pointerup" && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) adauga(b.dataset.add, pt(e));
+    }
+  };
+  b.addEventListener("pointerup", fin); b.addEventListener("pointercancel", fin);
+  b.addEventListener("click", () => { if (supClick) { supClick = false; return; } adauga(b.dataset.add, null); });
+});
+
+/* ---------- interacțiune cu tabla ---------- */
+function pt(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x, y: p.y }; }
+const others = () => S.elemente;
+svg.addEventListener("pointerdown", e => {
+  const p = pt(e);
+  if (mode === "pen") {
+    stroke = { id: SC.newId(), t: "ink", pts: [[Math.round(p.x), Math.round(p.y)]], c: pen, w: 6 };
+    S.elemente.push(stroke); svg.setPointerCapture(e.pointerId); renderSvg(); return;
+  }
+  if (mode === "erase") { drag = { k: "erase" }; svg.setPointerCapture(e.pointerId); eraseAt(e); return; }
+  const h = e.target.closest("[data-h]");
+  if (h && get(sel)) { drag = { k: "resize", end: h.dataset.h, moved: false }; svg.setPointerCapture(e.pointerId); return; }
+  const g = e.target.closest("[data-id]");
+  if (g && !g.classList.contains("ink")) {
+    const el = get(g.dataset.id); sel = el.id;
+    const end = SC.nearEnd(el, p);
+    if (end) { drag = { k: "resize", end, moved: false }; svg.setPointerCapture(e.pointerId); renderSvg(); renderPanel(); return; }
+    drag = { k: "move", id: el.id, dx: p.x - el.x, dy: p.y - el.y, x0: e.clientX, y0: e.clientY, moved: false };
+    svg.setPointerCapture(e.pointerId); renderSvg(); renderPanel(); return;
+  }
+  sel = null; renderSvg(); renderPanel();
+});
+svg.addEventListener("pointermove", e => {
+  const p = pt(e);
+  if (stroke) {
+    const last = stroke.pts[stroke.pts.length - 1];
+    if (Math.hypot(p.x - last[0], p.y - last[1]) > 2.5) { stroke.pts.push([Math.round(p.x), Math.round(p.y)]); renderSvg(); }
+    return;
+  }
+  if (!drag) {
+    if (mode === "sel" && e.pointerType === "mouse") {
+      const g = e.target.closest && e.target.closest("[data-id]"), el = g && get(g.dataset.id), n = el && SC.nearEnd(el, p);
+      svg.style.cursor = n ? (SC.horiz(el) ? "ew-resize" : "ns-resize") : (el && el.t !== "ink" ? "move" : "default");
+    }
+    return;
+  }
+  if (drag.k === "erase") { eraseAt(e); return; }
+  const el = get(sel); if (!el) return;
+  if (drag.k === "move") {
+    if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 5) return;
+    drag.moved = true;
+    const r = SC.snapMove(el, p.x - drag.dx, p.y - drag.dy, others(), grid);
+    el.x = Math.round(r.x); el.y = Math.round(r.y); guides = { gx: r.gx, gy: r.gy }; renderSvg();
+  } else if (drag.k === "resize") {
+    drag.moved = true;
+    const r = SC.snapEnd(el, SC.horiz(el) ? p.x : p.y, others(), grid);
+    SC.resize(el, drag.end, Math.round(r.pos));
+    guides = r.ax === "x" ? { gx: r.g, gy: null } : { gx: null, gy: r.g }; renderSvg();
+  }
+});
+function endDrag() {
+  if (stroke) { if (stroke.pts.length < 2) stroke.pts.push([stroke.pts[0][0] + .1, stroke.pts[0][1]]); stroke = null; commit(); renderSvg(); return; }
+  if (!drag) return;
+  const moved = drag.moved || drag.k === "erase"; drag = null; guides = null;
+  if (moved) commit();
+  renderAll();
+}
+svg.addEventListener("pointerup", endDrag);
+svg.addEventListener("pointercancel", endDrag);
+function eraseAt(e) {
+  const t = document.elementFromPoint(e.clientX, e.clientY), n = t && t.closest && t.closest(".ink");
+  if (n) { S.elemente = S.elemente.filter(x => x.id !== n.dataset.id); renderSvg(); }
+}
+
+/* ---------- bara de sus ---------- */
+function setMode(m) {
+  mode = m; if (m !== "sel") { sel = null; }
+  $("mSel").setAttribute("aria-pressed", m === "sel"); $("mPen").setAttribute("aria-pressed", m === "pen"); $("mErase").setAttribute("aria-pressed", m === "erase");
+  $("hint").textContent = m === "pen" ? "Scrie sau desenează cu degetul sau cu stiloul." : m === "erase" ? "Atinge scrisul ca să-l ștergi." : "Atinge sau trage un element din stânga pe tablă.";
+  renderAll();
+}
+$("mSel").onclick = () => setMode("sel"); $("mPen").onclick = () => setMode("pen"); $("mErase").onclick = () => setMode("erase");
+function renderPens() {
+  $("penCols").innerHTML = PENS.map(c => `<button class="sw${c === pen ? " on" : ""}" data-c="${c}" style="background:${c}" aria-label="Creion ${c}"></button>`).join("");
+}
+$("penCols").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (b) { pen = b.dataset.c; if (mode !== "pen") setMode("pen"); renderPens(); } });
+$("cGrid").onchange = e => { grid = e.target.checked; renderSvg(); };
+$("bClear").onclick = () => { if (!S.elemente.length || confirm("Ștergeți tot de pe tablă?")) { S.elemente = []; sel = null; commit(); renderAll(); } };
+
+/* ---------- exemplu: problema cu Ana și Camelia ---------- */
+$("bEx").onclick = () => {
+  if (S.elemente.length && !confirm("Exemplul înlocuiește ce este acum pe tablă. Continuați?")) return;
+  const m = (t, x, y, len, c, l, extra = {}) => ({ id: SC.newId(), t, x, y, len, o: "h", c, l, ...extra });
+  S = SC.nou();
+  S.elemente = [
+    { id: SC.newId(), t: "txt", x: 160, y: 250, s: 44, c: "#1d2b4f", l: "Ana" },
+    m("seg", 280, 200, 8 * U, "#3f6fd1", "23"),
+    { id: SC.newId(), t: "txt", x: 160, y: 410, s: 44, c: "#1d2b4f", l: "Camelia" },
+    m("seg", 280, 360, 8 * U, "#3f6fd1", "23"),
+    m("seg", 280 + 8 * U, 360, 4 * U, "#e09f1f", "12"),
+    m("acol", 280, 300, 12 * U, "#1d2b4f", "?", { l: "?", f: false }),
+    m("lin", 280 + 8 * U, 180, 6 * U, "#1d2b4f", "", { o: "v", dash: true })
+  ];
+  sel = null; commit(); renderAll();
+};
+
+/* ---------- salvare / încărcare ---------- */
+$("bSave").onclick = () => { $("dlgText").value = JSON.stringify(S, null, 1); $("dlgMsg").textContent = ""; $("dlg").showModal(); };
+$("bClose").onclick = () => $("dlg").close();
+$("bCopy").onclick = async () => { try { await navigator.clipboard.writeText($("dlgText").value); $("dlgMsg").textContent = "Copiat ✓"; } catch (e) { $("dlgText").select(); $("dlgMsg").textContent = "Selectat. Folosiți Copiază din meniul dispozitivului."; } };
+$("bDown").onclick = () => { try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([$("dlgText").value], { type: "application/json" })); a.download = "scena.json"; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { $("dlgMsg").textContent = "Descărcarea nu e disponibilă aici. Folosiți Copiază."; } };
+$("bLoad").onclick = () => {
+  try {
+    const d = JSON.parse($("dlgText").value);
+    if (!d || d.format !== "scena" || !Array.isArray(d.elemente)) throw new Error("nu este o scenă");
+    S = d; sel = null; commit(); renderAll(); $("dlg").close();
+  } catch (e) { $("dlgMsg").textContent = "Cod invalid: " + e.message; }
+};
+
+/* ---------- tastatură (pentru calculator) ---------- */
+addEventListener("keydown", e => {
+  const typing = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA";
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); $("bUndo").click(); }
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") { e.preventDefault(); $("bRedo").click(); }
+  else if (!typing && sel && (e.key === "Delete" || e.key === "Backspace")) { S.elemente = S.elemente.filter(x => x.id !== sel); sel = null; commit(); renderAll(); }
+});
+
+function renderAll() { renderSvg(); renderPanel(); }
+
+/* ---------- pornire ---------- */
+try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.format === "scena" && Array.isArray(d.elemente)) S = d; } catch (e) {}
+if (!S) S = SC.nou();
+renderPens(); commit(); renderAll();
+</script>
+</body>
+</html>
