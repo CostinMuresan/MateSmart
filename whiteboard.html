@@ -22,101 +22,144 @@
 html,body{margin:0;height:100%}
 body{
   font-family:var(--font);color:var(--ink);background:var(--paper);
-  display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
+  display:grid;grid-template-columns:118px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
   padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
   user-select:none;-webkit-user-select:none;overflow:hidden;
 }
-.palette{grid-row:1/3;background:var(--panel);border-right:3px solid var(--ink);padding:10px 8px;display:flex;flex-direction:column;gap:10px;overflow:auto}
-.palette h2{margin:2px 4px 0;font-size:15px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.pb{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:3px solid var(--ink);border-radius:14px;background:var(--paper);color:var(--ink);font:700 16px/1.1 var(--font);cursor:pointer}
+body.nopal{grid-template-columns:0 minmax(0,1fr)}
+body.nopal .palette{display:none}
+
+/* paleta de elemente */
+.palette{grid-row:1/3;background:var(--panel);border-right:3px solid var(--ink);padding:8px 6px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+.palette h2{margin:2px 4px 0;font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.pb{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 3px;border:3px solid var(--ink);border-radius:12px;background:var(--paper);color:var(--ink);font:700 14px/1.1 var(--font);cursor:pointer;touch-action:none}
 .pb:active{transform:scale(.97)}
-.pb{touch-action:none}
-.pb svg{width:100%;height:34px}
-.topbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;background:var(--panel);border-bottom:3px solid var(--ink)}
-.btn{font:700 18px/1 var(--font);min-height:50px;padding:0 16px;border-radius:12px;border:3px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer}
+.pb svg{width:100%;height:28px}
+
+/* bara de sus: un singur rând */
+.topbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 10px;background:var(--panel);border-bottom:3px solid var(--ink)}
+.btn{font:700 17px/1 var(--font);min-height:44px;padding:0 13px;border-radius:11px;border:3px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .btn[aria-pressed="true"]{background:#ffd447;color:#1d2b4f}
 .btn[disabled]{opacity:.4;cursor:default}
 .btn.primary{background:var(--ink);color:var(--paper)}
-a.btn{display:inline-flex;align-items:center;text-decoration:none}
 .btn.danger{border-color:var(--bad);color:var(--bad)}
-.sep{width:3px;align-self:stretch;background:var(--line);border-radius:2px;margin:2px 2px}
-.sw{width:44px;height:44px;border-radius:50%;border:3px solid var(--ink);padding:0;cursor:pointer}
-.sw.on{outline:4px solid #ffd447;outline-offset:2px}
-.grp{display:flex;gap:6px;align-items:center}
-label.chk{display:flex;gap:8px;align-items:center;font:700 18px var(--font);cursor:pointer}
-label.chk input{width:24px;height:24px}
-.stage{position:relative;min-height:0;min-width:0;display:grid}
+.btn.sq{width:44px;padding:0;font-size:22px}
+.sep{width:3px;align-self:stretch;background:var(--line);border-radius:2px;margin:2px 1px}
+.grp{display:flex;gap:5px;align-items:center}
+.sw{width:34px;height:34px;border-radius:50%;border:3px solid var(--ink);padding:0;cursor:pointer;flex:none}
+.sw.on{outline:4px solid #ffd447;outline-offset:1px}
+.swc{position:relative;display:inline-block;width:34px;height:34px;border-radius:50%;border:3px solid var(--ink);background:conic-gradient(#e4202d,#f2d024,#1f9d55,#2bb5c9,#1f4fd8,#c2418b,#e4202d);cursor:pointer;overflow:hidden;flex:none}
+.swc input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);opacity:0;cursor:pointer;border:0;padding:0}
+.zl{min-width:64px;font-size:16px}
+
+/* meniul „⋯” */
+.menuwrap{position:relative;margin-left:auto}
+.menu{position:absolute;right:0;top:calc(100% + 8px);z-index:40;min-width:250px;background:var(--panel);border:3px solid var(--ink);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+.menu[hidden]{display:none}
+.menu label.chk,.menu .btn{font:700 18px var(--font);min-height:46px;display:flex;align-items:center;gap:10px;padding:0 12px;border-radius:10px;cursor:pointer;justify-content:flex-start}
+.menu label.chk:hover,.menu .btn:hover{background:var(--paper)}
+.menu .btn{border:0;width:100%}
+.menu input[type=checkbox]{width:24px;height:24px}
+.menu hr{border:0;border-top:2px solid var(--line);margin:4px 0;width:100%}
+
+/* tabla */
+.stage{position:relative;min-height:0;min-width:0;display:grid;overflow:hidden}
 svg#cv{width:100%;height:100%;display:block;touch-action:none;cursor:default}
 svg#cv.mode-pen{cursor:crosshair}
 svg#cv.mode-erase{cursor:cell}
 svg#cv.mode-sel .ink{pointer-events:none}
 svg#cv.mode-pen .el,svg#cv.mode-erase .el{pointer-events:none}
 svg#cv.mode-erase .ink{pointer-events:stroke}
-.panel{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);max-width:calc(100% - 16px);background:var(--panel);border:3px solid var(--ink);border-radius:18px;padding:8px 10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.18)}
-.panel[hidden]{display:none}
-.panel .btn{min-height:46px;font-size:17px;padding:0 12px}
-.panel input[type=text]{font:700 22px var(--font);width:130px;height:46px;padding:0 10px;border-radius:10px;border:3px solid var(--ink);background:var(--paper);color:var(--ink);text-align:center}
-.kp{display:flex;flex-wrap:wrap;gap:4px;max-width:340px;justify-content:center}
-.k{width:46px;height:46px;border-radius:10px;border:3px solid var(--ink);background:var(--paper);color:var(--ink);font:800 20px var(--font);cursor:pointer;padding:0}
-.len{font:700 17px var(--font);min-width:92px;text-align:center}
-.colors{display:flex;flex-wrap:wrap;gap:5px;max-width:330px;justify-content:center;align-items:center}
-.colors .sw{width:36px;height:36px;border-width:2px}
-.colors .sep2{flex-basis:100%;height:0}
-.swc{position:relative;display:inline-block;width:36px;height:36px;border-radius:50%;border:2px solid var(--ink);background:conic-gradient(#e4202d,#f2d024,#1f9d55,#2bb5c9,#1f4fd8,#c2418b,#e4202d);cursor:pointer;overflow:hidden}
-.swc.big{width:44px;height:44px;border-width:3px}
-.swc input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);opacity:0;cursor:pointer;border:0;padding:0}
-.panel{max-height:62vh;overflow:auto}
-.hintbar{position:absolute;left:12px;top:10px;font:600 16px var(--font);color:var(--muted);pointer-events:none;background:color-mix(in srgb,var(--paper) 85%,transparent);padding:2px 8px;border-radius:8px}
+.hintbar{position:absolute;left:10px;top:8px;font:600 15px var(--font);color:var(--muted);pointer-events:none;background:color-mix(in srgb,var(--paper) 85%,transparent);padding:2px 8px;border-radius:8px;transition:opacity .6s}
+.hintbar.off{opacity:0}
+
+/* mini-bara de lângă element (apare doar la atingere) */
+.minibar{position:absolute;z-index:20;display:flex;gap:3px;align-items:center;padding:4px;background:var(--panel);border:3px solid var(--ink);border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.25);max-width:calc(100% - 8px)}
+.minibar[hidden],.pop[hidden]{display:none}
+.mb{width:42px;height:42px;border-radius:10px;border:2px solid transparent;background:transparent;color:var(--ink);font:800 20px/1 var(--font);cursor:pointer;padding:0;display:inline-grid;place-items:center}
+.mb:hover,.mb:active{background:var(--paper);border-color:var(--line)}
+.mb.danger{color:var(--bad)}
+.mb svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mb .dot{display:block;width:24px;height:24px;border-radius:50%;border:3px solid var(--ink)}
+.mb .aa{font-size:17px}
+.lenv{font:700 15px var(--font);min-width:34px;text-align:center;color:var(--muted)}
+.vs{width:2px;align-self:stretch;background:var(--line);margin:3px 2px}
+.pop{position:absolute;z-index:21;background:var(--panel);border:3px solid var(--ink);border-radius:14px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.colors{display:grid;grid-template-columns:repeat(7,34px);gap:5px;justify-content:center}
+.colors .sw{width:34px;height:34px;border-width:2px}
+.colors .swc{width:34px;height:34px;border-width:2px}
+.colors .sep2{grid-column:1/-1;height:0}
+.pop input[type=text]{font:700 22px var(--font);width:100%;height:42px;padding:0 10px;border-radius:10px;border:3px solid var(--ink);background:var(--paper);color:var(--ink);text-align:center;margin-bottom:6px}
+.kp{display:grid;grid-template-columns:repeat(5,44px);gap:4px}
+.k{height:44px;border-radius:10px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);font:800 20px var(--font);cursor:pointer;padding:0}
+.k.wide{grid-column:span 5;font-size:17px;background:var(--ink);color:var(--paper)}
+
 dialog{width:min(820px,94vw);border:3px solid var(--ink);border-radius:16px;background:var(--panel);color:var(--ink);padding:16px}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog textarea{width:100%;min-height:300px;font:13px ui-monospace,Menlo,Consolas,monospace;border:2px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);padding:8px}
 button:focus-visible,input:focus-visible{outline:4px solid #ffd447;outline-offset:2px}
 @media (max-width:760px){
-  body{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr)}
+  body,body.nopal{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr)}
   .palette{grid-row:auto;flex-direction:row;border-right:0;border-bottom:3px solid var(--ink);overflow-x:auto}
+  body.nopal .palette{display:none}
   .palette h2{display:none}
-  .pb{min-width:96px}
+  .pb{min-width:90px}
 }
 </style>
 </head>
 <body>
-<aside class="palette" aria-label="Elemente">
+<aside class="palette" id="pal" aria-label="Elemente">
   <h2>Elemente</h2>
-  <button class="pb" data-add="seg" title="Segment"><svg viewBox="0 0 100 34"><rect x="6" y="6" width="88" height="22" rx="4" fill="#3f6fd1" stroke="#1d2b4f" stroke-width="3"/></svg>Segment</button>
+  <button class="pb" data-add="seg" title="Segment"><svg viewBox="0 0 100 34"><rect x="6" y="9" width="88" height="16" rx="3" fill="#3f6fd1" stroke="#1d2b4f" stroke-width="3"/></svg>Segment</button>
   <button class="pb" data-add="lin"><svg viewBox="0 0 100 34"><line x1="8" y1="17" x2="92" y2="17" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>Linie</button>
-  <button class="pb" data-add="ldot"><svg viewBox="0 0 100 34"><line x1="8" y1="17" x2="92" y2="17" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-dasharray="1 12"/></svg>Linie punctată</button>
+  <button class="pb" data-add="ldot"><svg viewBox="0 0 100 34"><line x1="8" y1="17" x2="92" y2="17" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-dasharray="1 12"/></svg>Punctată</button>
   <button class="pb" data-add="acol"><svg viewBox="0 0 100 34"><path d="M6 28Q6 18 16 18L40 18Q50 18 50 6Q50 18 60 18L84 18Q94 18 94 28" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>Acoladă</button>
-  <button class="pb" data-add="txt"><svg viewBox="0 0 100 34"><text x="50" y="27" text-anchor="middle" font-size="28" font-weight="800" fill="currentColor">12 ?</text></svg>Etichetă</button>
+  <button class="pb" data-add="txt"><svg viewBox="0 0 100 34"><text x="50" y="27" text-anchor="middle" font-size="26" font-weight="800" fill="currentColor">12 ?</text></svg>Etichetă</button>
   <h2>Lecție</h2>
   <button class="pb" id="bEx">Exemplu</button>
 </aside>
 
 <div class="topbar" role="toolbar">
-  <a class="btn" href="index.html">🏠 Acasă</a>
+  <a class="btn" href="index.html" title="Meniu principal">🏠</a>
   <div class="grp">
     <button class="btn" id="mSel" aria-pressed="true">Alege</button>
     <button class="btn" id="mPen" aria-pressed="false">Scrie</button>
     <button class="btn" id="mErase" aria-pressed="false">Radieră</button>
   </div>
   <div class="grp" id="penCols" role="radiogroup" aria-label="Culoare creion"></div>
-  <label class="swc big" title="Altă culoare pentru creion"><input type="color" id="penCustom" value="#7a5cc7" aria-label="Altă culoare pentru creion"></label>
+  <label class="swc" title="Altă culoare pentru creion"><input type="color" id="penCustom" value="#7a5cc7" aria-label="Altă culoare pentru creion"></label>
   <span class="sep"></span>
   <div class="grp">
-    <button class="btn" id="bUndo" aria-label="Înapoi">↶</button>
-    <button class="btn" id="bRedo" aria-label="Înainte">↷</button>
+    <button class="btn sq" id="bUndo" aria-label="Înapoi">↶</button>
+    <button class="btn sq" id="bRedo" aria-label="Înainte">↷</button>
   </div>
-  <label class="chk"><input type="checkbox" id="cGrid" checked> Grilă</label>
-  <label class="chk" title="Segmentele se pot lungi cu orice lungime, fără pași pe pătrățele"><input type="checkbox" id="cFree"> Lungime liberă</label>
   <span class="sep"></span>
-  <button class="btn" id="bSave">Salvează / Încarcă</button>
-  <button class="btn danger" id="bClear">Șterge tot</button>
-  <button class="btn" id="bTema"></button>
+  <div class="grp" aria-label="Zoom">
+    <button class="btn sq" id="bZm" aria-label="Micșorează">−</button>
+    <button class="btn zl" id="zLab" title="Potrivește pe ecran">100%</button>
+    <button class="btn sq" id="bZp" aria-label="Mărește">+</button>
+  </div>
+  <div class="menuwrap">
+    <button class="btn sq" id="bMenu" aria-label="Meniu" aria-expanded="false">⋯</button>
+    <div class="menu" id="menu" hidden>
+      <label class="chk"><input type="checkbox" id="cGrid" checked> Grilă (pași pe pătrățele)</label>
+      <label class="chk" title="Segmentele se pot lungi cu orice lungime"><input type="checkbox" id="cFree"> Lungime liberă</label>
+      <label class="chk"><input type="checkbox" id="cPal" checked> Arată elementele (stânga)</label>
+      <hr>
+      <button class="btn" id="bSave">💾 Salvează / Încarcă</button>
+      <button class="btn" id="bEx2">📏 Exemplu (Ana și Camelia)</button>
+      <button class="btn danger" id="bClear">🗑 Șterge tot</button>
+      <hr>
+      <button class="btn" id="bTema"></button>
+    </div>
+  </div>
 </div>
 
-<main class="stage">
+<main class="stage" id="stage">
   <svg id="cv" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Tabla de desen"></svg>
-  <div class="hintbar" id="hint">Atinge sau trage un element din stânga pe tablă.</div>
-  <div class="panel" id="panel" hidden></div>
+  <div class="hintbar" id="hint"></div>
+  <div class="minibar" id="bar" hidden></div>
+  <div class="pop" id="pop" hidden></div>
 </main>
 
 <dialog id="dlg">
@@ -134,25 +177,28 @@ button:focus-visible,input:focus-visible{outline:4px solid #ffd447;outline-offse
 
 <script src="scena.js"></script>
 <script>
-const KEY = "matematica.scena.v1";
+const KEY = "matematica.scena.v1", PKEY = "matematica.scena.pref";
 const $ = id => document.getElementById(id);
-const svg = $("cv");
-const U = SC.U;
-let S, sel = null, mode = "sel", pen = "ink", grid = true, hist = [], hi = -1, drag = null, guides = null, stroke = null, ultC = SC.CULORI[0][0];
+const svg = $("cv"), stage = $("stage");
+const U = SC.U, W = SC.W, H = SC.H;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+let S, sel = null, mode = "sel", pen = "ink", grid = true, free = false, hist = [], hi = -1, drag = null, guides = null, stroke = null, ultC = SC.CULORI[0][0];
+let view = { x: 0, y: 0, w: W, h: H }, ui = { bar: false, pop: null };
+const ptrs = new Map(); let gest = null, ignore = false, popKey = "";
 const PENS = ["ink", "#e4202d", "#1f4fd8", "#1f9d55"];
-let free = false;
-const PKEY = "matematica.scena.pref";
-let pref = { recent: [], free: false, grid: true };
+const HINT_EL = "Atinge un element ca să apară uneltele. Trage cu două degete ca să mărești.";
+
+/* ---------- preferințe ---------- */
+let pref = { recent: [], free: false, grid: true, pal: true };
 try { const q = JSON.parse(localStorage.getItem(PKEY)); if (q && typeof q === "object") pref = { ...pref, ...q }; } catch (e) {}
 const savePref = () => { pref.free = free; pref.grid = grid; try { localStorage.setItem(PKEY, JSON.stringify(pref)); } catch (e) {} };
 function addRecent(c) {
   if (!/^#[0-9a-f]{6}$/i.test(c) || SC.CULORI.some(x => x[0].toLowerCase() === c.toLowerCase())) return;
   pref.recent = [c, ...pref.recent.filter(x => x.toLowerCase() !== c.toLowerCase())].slice(0, 8); savePref();
 }
-const get = id => S.elemente.find(e => e.id === id);
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 /* ---------- istoric + salvare locală ---------- */
+const get = id => S.elemente.find(e => e.id === id);
 function commit() {
   const j = JSON.stringify(S);
   if (hist[hi] === j) return;
@@ -160,88 +206,153 @@ function commit() {
   try { localStorage.setItem(KEY, j); } catch (e) {}
   updUndo();
 }
-function restore() { S = JSON.parse(hist[hi]); if (!get(sel)) sel = null; try { localStorage.setItem(KEY, hist[hi]); } catch (e) {} updUndo(); renderAll(); }
+function restore() { S = JSON.parse(hist[hi]); if (!get(sel)) { sel = null; ui.bar = false; ui.pop = null; } try { localStorage.setItem(KEY, hist[hi]); } catch (e) {} updUndo(); renderAll(); }
 function updUndo() { $("bUndo").disabled = hi <= 0; $("bRedo").disabled = hi >= hist.length - 1; }
 $("bUndo").onclick = () => { if (hi > 0) { hi--; restore(); } };
 $("bRedo").onclick = () => { if (hi < hist.length - 1) { hi++; restore(); } };
 
+/* ---------- zoom și deplasare ---------- */
+const kz = () => view.w / W;            // 1 = totul; 0,25 = zoom 400%
+function setView(x, y, w) {
+  w = clamp(w, W / 4, W); const h = w * H / W;
+  view = { x: clamp(x, 0, W - w), y: clamp(y, 0, H - h), w, h };
+  svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
+  $("zLab").textContent = Math.round(W / view.w * 100) + "%";
+  renderSvg(); renderUI();
+}
+function zoomAt(f, cx, cy) {
+  const nw = clamp(view.w / f, W / 4, W), r = nw / view.w;
+  setView(cx - (cx - view.x) * r, cy - (cy - view.y) * r, nw);
+}
+const viewCenter = () => ({ x: view.x + view.w / 2, y: view.y + view.h / 2 });
+$("bZp").onclick = () => { const c = viewCenter(); zoomAt(1.25, c.x, c.y); };
+$("bZm").onclick = () => { const c = viewCenter(); zoomAt(1 / 1.25, c.x, c.y); };
+$("zLab").onclick = () => setView(0, 0, W);
+svg.addEventListener("wheel", e => { e.preventDefault(); const p = pt(e); zoomAt(Math.exp(-e.deltaY * 0.0022), p.x, p.y); }, { passive: false });
+
 /* ---------- desenare ---------- */
+function pt(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x, y: p.y }; }
 function selMarkup() {
   const e = get(sel); if (!e || e.t === "ink") return "";
-  const b = SC.ext(e), pad = 8;
-  let h = `<rect x="${b.x1 - pad}" y="${b.y1 - pad}" width="${b.x2 - b.x1 + 2 * pad}" height="${b.y2 - b.y1 + 2 * pad}" rx="10" style="fill:none;stroke:#ffd447;pointer-events:none" stroke-width="5" stroke-dasharray="14 8"/>`;
+  const k = kz(), b = SC.ext(e), pad = 8 * k;
+  let h = `<rect x="${b.x1 - pad}" y="${b.y1 - pad}" width="${b.x2 - b.x1 + 2 * pad}" height="${b.y2 - b.y1 + 2 * pad}" rx="${10 * k}" style="fill:none;stroke:#ffd447;pointer-events:none" stroke-width="${5 * k}" stroke-dasharray="${14 * k} ${8 * k}"/>`;
   if (e.t === "seg" || e.t === "lin" || e.t === "acol") {
     const hz = SC.horiz(e), cx = (b.x1 + b.x2) / 2, cy = (b.y1 + b.y2) / 2;
     const ends = hz ? [["a", b.x1, cy], ["b", b.x2, cy]] : [["a", cx, b.y1], ["b", cx, b.y2]];
-    ends.forEach(([k, x, y]) => { h += `<circle data-h="${k}" cx="${x}" cy="${y}" r="15" style="fill:#ffd447;stroke:#1d2b4f;cursor:ew-resize" stroke-width="4"/><circle data-h="${k}" cx="${x}" cy="${y}" r="34" style="fill:transparent"/>`; });
+    ends.forEach(([n, x, y]) => { h += `<circle data-h="${n}" cx="${x}" cy="${y}" r="${15 * k}" style="fill:#ffd447;stroke:#1d2b4f;cursor:ew-resize" stroke-width="${4 * k}"/><circle data-h="${n}" cx="${x}" cy="${y}" r="${34 * k}" style="fill:transparent"/>`; });
   }
   return h;
 }
 function renderSvg() {
-  const els = S.elemente, ord = [...els.filter(e => e.t !== "ink"), ...els.filter(e => e.t === "ink")];
-  const g = guides ? [guides.gx !== null && guides.gx !== undefined ? `<line x1="${guides.gx}" y1="0" x2="${guides.gx}" y2="${SC.H}" style="stroke:#e4202d" stroke-width="3" stroke-dasharray="10 8"/>` : "", guides.gy !== null && guides.gy !== undefined ? `<line x1="0" y1="${guides.gy}" x2="${SC.W}" y2="${guides.gy}" style="stroke:#e4202d" stroke-width="3" stroke-dasharray="10 8"/>` : ""].join("") : "";
+  const els = S.elemente, ord = [...els.filter(e => e.t !== "ink"), ...els.filter(e => e.t === "ink")], k = kz();
+  const g = guides ? [guides.gx != null ? `<line x1="${guides.gx}" y1="0" x2="${guides.gx}" y2="${H}" style="stroke:#e4202d" stroke-width="${3 * k}" stroke-dasharray="${10 * k} ${8 * k}"/>` : "", guides.gy != null ? `<line x1="0" y1="${guides.gy}" x2="${W}" y2="${guides.gy}" style="stroke:#e4202d" stroke-width="${3 * k}" stroke-dasharray="${10 * k} ${8 * k}"/>` : ""].join("") : "";
   svg.setAttribute("class", "mode-" + mode);
   svg.innerHTML = `<defs><pattern id="gp" width="${U}" height="${U}" patternUnits="userSpaceOnUse"><path d="M${U} 0H0V${U}" style="fill:none;stroke:var(--grid)" stroke-width="2"/></pattern></defs>
-    <rect width="${SC.W}" height="${SC.H}" style="fill:var(--paper)"/>${grid ? `<rect width="${SC.W}" height="${SC.H}" style="fill:url(#gp)"/>` : ""}
+    <rect width="${W}" height="${H}" style="fill:var(--paper)"/>${grid ? `<rect width="${W}" height="${H}" style="fill:url(#gp)"/>` : ""}
     ${ord.map(SC.desen).join("")}${g}${selMarkup()}`;
 }
 
-/* ---------- panou de proprietăți ---------- */
-function renderPanel() {
-  const p = $("panel"), e = get(sel);
-  if (!e || e.t === "ink") { p.hidden = true; return; }
-  p.hidden = false;
-  const on = c => String(e.c || "").toLowerCase() === c.toLowerCase() || (c === "ink" && e.t !== "seg" && SC.isInk(e.c));
-  const sw = (c, n) => `<button class="sw${on(c) ? " on" : ""}" data-a="col" data-c="${c}" style="background:${c === "ink" ? "var(--ink)" : c}" aria-label="${n}" title="${n}"></button>`;
-  const cur = /^#[0-9a-f]{6}$/i.test(e.c || "") ? e.c : "#3f6fd1";
-  const cols = SC.CULORI.map(([c, n]) => sw(c, n)).join("") + `<label class="swc" title="Orice altă culoare"><input type="color" id="colCustom" value="${cur}" aria-label="Altă culoare"></label>`
-    + (pref.recent.length ? `<span class="sep2"></span>` + pref.recent.map(c => sw(c, "Culoare salvată " + c)).join("") : "");
-  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "?", "+", "=", "−", "⌫"].map(k => `<button class="k" data-a="key" data-k="${k}">${k}</button>`).join("");
-  const lenCtl = (e.t === "seg" || e.t === "lin" || e.t === "acol") ? `<div class="grp"><button class="btn" data-a="len" data-d="-1" aria-label="Mai scurt">−</button><span class="len">${Math.round(e.len / U * 100) / 100} unități</span><button class="btn" data-a="len" data-d="1" aria-label="Mai lung">+</button></div>` : "";
-  const sizeCtl = e.t === "txt" ? `<div class="grp"><button class="btn" data-a="size" data-d="-8" aria-label="Mai mic">A−</button><button class="btn" data-a="size" data-d="8" aria-label="Mai mare">A+</button></div>` : "";
-  const label = (e.t === "seg" || e.t === "acol" || e.t === "txt") ? `<div class="grp" style="flex-direction:column"><input type="text" id="lbl" maxlength="10" value="${SC.esc(e.l)}" placeholder="etichetă" aria-label="Etichetă"><div class="kp">${keys}</div></div>` : "";
-  const colors = `<div class="colors">${cols}</div>`;
-  const extra = (e.t === "seg" || e.t === "lin") ? `<button class="btn" data-a="rot">⟳ Rotește</button>` : "";
-  const dash = e.t === "lin" ? `<button class="btn" data-a="dash" aria-pressed="${!!e.dash}">${e.dash ? "Punctată" : "Continuă"}</button>` : "";
-  const flip = e.t === "acol" ? `<button class="btn" data-a="flip">⇅ Răstoarnă</button>` : "";
-  p.innerHTML = `${colors}${label}${lenCtl}${sizeCtl}${extra}${dash}${flip}<button class="btn" data-a="dup">Duplică</button><button class="btn danger" data-a="del">Șterge</button>`;
+/* ---------- mini-bara și ferestrele mici (doar la nevoie) ---------- */
+const IC = {
+  rot: '<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-3-6.2M20 4v5h-5"/></svg>',
+  dup: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></svg>',
+  del: '<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+  dash: '<svg viewBox="0 0 24 24"><path d="M3 12h2M8 12h2M13 12h2M18 12h3"/></svg>',
+  solid: '<svg viewBox="0 0 24 24"><path d="M3 12h18"/></svg>'
+};
+const fmtLen = e => String(Math.round(e.len / U * 100) / 100).replace(".", ",");
+function barHtml(e) {
+  const cur = e.c === "ink" || SC.isInk(e.c) && e.t !== "seg" ? "var(--ink)" : (e.c || "#888");
+  const b = (a, inner, extra = "", title = "", cls = "") => `<button class="mb ${cls}" data-a="${a}" ${extra} title="${title}" aria-label="${title}">${inner}</button>`;
+  let h = b("col", `<i class="dot" style="background:${cur}"></i>`, "", "Culoare");
+  if (e.t === "seg" || e.t === "acol" || e.t === "txt") h += b("lbl", `<span class="aa">${e.t === "txt" ? "Aa" : "12"}</span>`, "", "Etichetă");
+  if (e.t === "seg" || e.t === "lin" || e.t === "acol") h += `<span class="vs"></span>` + b("len", "−", 'data-d="-1"', "Mai scurt") + `<span class="lenv">${fmtLen(e)}</span>` + b("len", "+", 'data-d="1"', "Mai lung");
+  if (e.t === "txt") h += `<span class="vs"></span>` + b("size", "A−", 'data-d="-8"', "Mai mic") + b("size", "A+", 'data-d="8"', "Mai mare");
+  h += `<span class="vs"></span>`;
+  if (e.t === "seg" || e.t === "lin") h += b("rot", IC.rot, "", "Rotește");
+  if (e.t === "lin") h += b("dash", e.dash ? IC.solid : IC.dash, "", e.dash ? "Fă-o continuă" : "Fă-o punctată");
+  if (e.t === "acol") h += b("flip", "⇅", "", "Răstoarnă");
+  h += b("dup", IC.dup, "", "Duplică") + b("del", IC.del, "", "Șterge", "danger");
+  return h;
 }
-$("panel").addEventListener("click", ev => {
+function popHtml(e) {
+  if (ui.pop === "col") {
+    const on = c => String(e.c || "").toLowerCase() === c.toLowerCase() || (c === "ink" && e.t !== "seg" && SC.isInk(e.c));
+    const sw = (c, n) => `<button class="sw${on(c) ? " on" : ""}" data-a="setcol" data-c="${c}" style="background:${c === "ink" ? "var(--ink)" : c}" aria-label="${n}" title="${n}"></button>`;
+    const cur = /^#[0-9a-f]{6}$/i.test(e.c || "") ? e.c : "#3f6fd1";
+    return `<div class="colors">${SC.CULORI.map(([c, n]) => sw(c, n)).join("")}<label class="swc" title="Orice altă culoare"><input type="color" id="colCustom" value="${cur}" aria-label="Altă culoare"></label>${pref.recent.length ? `<span class="sep2"></span>` + pref.recent.map(c => sw(c, "Culoare salvată " + c)).join("") : ""}</div>`;
+  }
+  if (ui.pop === "lbl") {
+    const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "?", "+", "=", "−", "⌫"].map(k => `<button class="k" data-a="key" data-k="${k}">${k}</button>`).join("");
+    return `<input type="text" id="lbl" maxlength="10" value="${SC.esc(e.l)}" placeholder="etichetă" aria-label="Etichetă"><div class="kp">${keys}<button class="k wide" data-a="done">Gata</button></div>`;
+  }
+  return "";
+}
+function renderUI() {
+  const bar = $("bar"), pop = $("pop"), e = get(sel);
+  if (!e || e.t === "ink" || !ui.bar || mode !== "sel" || gest) { bar.hidden = true; pop.hidden = true; popKey = ""; return; }
+  bar.innerHTML = barHtml(e); bar.hidden = false;
+  const sw = stage.clientWidth, sh = stage.clientHeight, bw = bar.offsetWidth, bh = bar.offsetHeight, b = SC.ext(e);
+  const a = toStage((b.x1 + b.x2) / 2, b.y1), c = toStage((b.x1 + b.x2) / 2, b.y2);
+  let top = a.y - bh - 16; if (top < 4) top = c.y + 16;
+  top = clamp(top, 4, Math.max(4, sh - bh - 4));
+  const left = clamp(a.x - bw / 2, 4, Math.max(4, sw - bw - 4));
+  bar.style.left = left + "px"; bar.style.top = top + "px";
+  if (!ui.pop) { pop.hidden = true; popKey = ""; return; }
+  const key = ui.pop + "|" + sel;
+  if (key !== popKey) { pop.innerHTML = popHtml(e); popKey = key; }
+  pop.hidden = false;
+  const pw = pop.offsetWidth, ph = pop.offsetHeight;
+  let pt2 = top + bh + 8; if (pt2 + ph > sh - 4) pt2 = top - ph - 8;
+  pop.style.left = clamp(left, 4, Math.max(4, sw - pw - 4)) + "px"; pop.style.top = Math.max(4, pt2) + "px";
+}
+function toStage(x, y) {
+  const p = new DOMPoint(x, y).matrixTransform(svg.getScreenCTM()), r = stage.getBoundingClientRect();
+  return { x: p.x - r.left, y: p.y - r.top };
+}
+function renderAll() { renderSvg(); renderUI(); }
+
+$("bar").addEventListener("click", ev => {
   const b = ev.target.closest("[data-a]"); if (!b) return;
   const e = get(sel); if (!e) return; const a = b.dataset.a;
-  if (a === "col") { e.c = b.dataset.c; if (e.t === "seg") ultC = e.c; }
-  else if (a === "key") { const k = b.dataset.k; e.l = k === "⌫" ? (e.l || "").slice(0, -1) : ((e.l || "") + k).slice(0, 10); }
-  else if (a === "len") { const d = +b.dataset.d, ax = SC.horiz(e) ? "x" : "y", lim = ax === "x" ? SC.W : SC.H; e.len = clamp(e.len + d * (free ? U / 4 : U), free ? 10 : U, lim - e[ax]); }
+  if (a === "col" || a === "lbl") { ui.pop = ui.pop === a ? null : a; renderUI(); return; }
+  if (a === "len") { const d = +b.dataset.d, ax = SC.horiz(e) ? "x" : "y", lim = ax === "x" ? W : H; e.len = clamp(e.len + d * (free ? U / 4 : U), free ? 10 : U, lim - e[ax]); }
   else if (a === "size") e.s = clamp((e.s || 56) + (+b.dataset.d), 24, 160);
   else if (a === "rot") SC.rotate(e);
   else if (a === "dash") e.dash = !e.dash;
   else if (a === "flip") e.f = !e.f;
-  else if (a === "dup") { const c = JSON.parse(JSON.stringify(e)); c.id = SC.newId(); c.x = clamp(c.x + U, 0, SC.W - 40); c.y = clamp(c.y + U, 0, SC.H - 40); S.elemente.push(c); sel = c.id; }
-  else if (a === "del") { S.elemente = S.elemente.filter(x => x.id !== sel); sel = null; }
-  commit(); renderSvg(); renderPanel();
+  else if (a === "dup") { const c = JSON.parse(JSON.stringify(e)); c.id = SC.newId(); c.x = clamp(c.x + U, 0, W - 40); c.y = clamp(c.y + U, 0, H - 40); S.elemente.push(c); sel = c.id; ui.pop = null; }
+  else if (a === "del") { S.elemente = S.elemente.filter(x => x.id !== sel); sel = null; ui.bar = false; ui.pop = null; }
+  commit(); renderAll();
 });
-$("panel").addEventListener("input", ev => {
+$("pop").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-a]"); if (!b) return;
+  const e = get(sel); if (!e) return; const a = b.dataset.a;
+  if (a === "setcol") { e.c = b.dataset.c; if (e.t === "seg") ultC = e.c; ui.pop = null; commit(); renderAll(); }
+  else if (a === "key") {
+    const k = b.dataset.k; e.l = k === "⌫" ? (e.l || "").slice(0, -1) : ((e.l || "") + k).slice(0, 10);
+    const inp = $("lbl"); if (inp) inp.value = e.l; commit(); renderSvg();
+  } else if (a === "done") { ui.pop = null; renderUI(); }
+});
+$("pop").addEventListener("input", ev => {
   const e = get(sel); if (!e) return;
   if (ev.target.id === "lbl") { e.l = ev.target.value; renderSvg(); }
   else if (ev.target.id === "colCustom") { e.c = ev.target.value; if (e.t === "seg") ultC = e.c; renderSvg(); }
 });
-$("panel").addEventListener("change", ev => {
+$("pop").addEventListener("change", ev => {
   const e = get(sel);
   if (ev.target.id === "lbl") commit();
-  else if (ev.target.id === "colCustom" && e) { addRecent(e.c); commit(); renderPanel(); }
+  else if (ev.target.id === "colCustom" && e) { addRecent(e.c); ui.pop = null; commit(); renderAll(); }
 });
 
-/* ---------- adăugare elemente: atingere SAU tragere de pe paletă pe tablă ---------- */
-const HINT_EL = "Trage de mijlocul elementului ca să-l muți și de capete ca să-l lungești.";
+/* ---------- adăugare elemente: atingere SAU tragere de pe paletă ---------- */
 function adauga(tip, p) {
   setMode("sel");
   const e = SC.elNou(tip, S.elemente.length, ultC);
-  if (p) {
-    const b = SC.ext(e), r = SC.snapMove(e, e.x + (p.x - (b.x1 + b.x2) / 2), e.y + (p.y - (b.y1 + b.y2) / 2), S.elemente, grid);
-    e.x = Math.round(r.x); e.y = Math.round(r.y);
-  }
-  S.elemente.push(e); sel = e.id; commit(); renderAll();
-  $("hint").textContent = HINT_EL;
+  const c = p || (() => { const v = viewCenter(), n = S.elemente.length % 5; return { x: v.x + n * U, y: v.y + n * U }; })();
+  const b = SC.ext(e), r = SC.snapMove(e, e.x + (c.x - (b.x1 + b.x2) / 2), e.y + (c.y - (b.y1 + b.y2) / 2), S.elemente, grid, 18 * kz());
+  e.x = Math.round(r.x); e.y = Math.round(r.y);
+  S.elemente.push(e); sel = e.id; ui.bar = false; ui.pop = null; commit(); renderAll();
 }
 let pdrag = null, supClick = false;
 document.querySelectorAll("[data-add]").forEach(b => {
@@ -251,10 +362,10 @@ document.querySelectorAll("[data-add]").forEach(b => {
     if (!pdrag.moved && Math.hypot(e.clientX - pdrag.x0, e.clientY - pdrag.y0) > 10) {
       pdrag.moved = true;
       const g = document.createElement("div"); g.className = "pb"; g.innerHTML = b.innerHTML;
-      g.style.cssText = "position:fixed;z-index:60;pointer-events:none;width:120px;opacity:.9;box-shadow:0 10px 24px rgba(0,0,0,.25)";
+      g.style.cssText = "position:fixed;z-index:60;pointer-events:none;width:110px;opacity:.9;box-shadow:0 10px 24px rgba(0,0,0,.25)";
       document.body.appendChild(g); pdrag.ghost = g;
     }
-    if (pdrag.moved) { pdrag.ghost.style.left = (e.clientX - 60) + "px"; pdrag.ghost.style.top = (e.clientY - 30) + "px"; }
+    if (pdrag.moved) { pdrag.ghost.style.left = (e.clientX - 55) + "px"; pdrag.ghost.style.top = (e.clientY - 30) + "px"; }
   });
   const fin = e => {
     if (!pdrag || pdrag.b !== b) return;
@@ -271,86 +382,131 @@ document.querySelectorAll("[data-add]").forEach(b => {
 });
 
 /* ---------- interacțiune cu tabla ---------- */
-function pt(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x, y: p.y }; }
-const others = () => S.elemente;
+const ptAt = (x, y) => pt({ clientX: x, clientY: y });
+function startGesture() {
+  if (stroke) { S.elemente = S.elemente.filter(x => x.id !== stroke.id); stroke = null; }
+  if (drag && (drag.k === "move" || drag.k === "resize") && drag.moved) S = JSON.parse(hist[hi]);
+  drag = null; guides = null; ui.bar = false; ui.pop = null;
+  const [a, b] = [...ptrs.values()], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  gest = { d0: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), v0: { ...view }, c0: ptAt(mx, my) };
+  renderAll();
+}
+function doGesture() {
+  const [a, b] = [...ptrs.values()], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, d = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+  const nw = clamp(gest.v0.w / (d / gest.d0), W / 4, W);
+  view = { x: gest.v0.x, y: gest.v0.y, w: nw, h: nw * H / W };
+  svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
+  const p = ptAt(mx, my);
+  setView(view.x + gest.c0.x - p.x, view.y + gest.c0.y - p.y, nw);
+}
 svg.addEventListener("pointerdown", e => {
-  const p = pt(e);
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  closeMenu();
+  if (ptrs.size === 2) { startGesture(); return; }
+  if (ptrs.size > 2 || ignore) return;
+  const p = pt(e), k = kz();
+  ui.pop = null;
   if (mode === "pen") {
     stroke = { id: SC.newId(), t: "ink", pts: [[Math.round(p.x), Math.round(p.y)]], c: pen, w: 6 };
-    S.elemente.push(stroke); svg.setPointerCapture(e.pointerId); renderSvg(); return;
+    S.elemente.push(stroke); svg.setPointerCapture(e.pointerId); renderSvg(); renderUI(); return;
   }
-  if (mode === "erase") { drag = { k: "erase" }; svg.setPointerCapture(e.pointerId); eraseAt(e); return; }
+  if (mode === "erase") { drag = { k: "erase", n: 0 }; svg.setPointerCapture(e.pointerId); eraseAt(e); return; }
   const h = e.target.closest("[data-h]");
-  if (h && get(sel)) { drag = { k: "resize", end: h.dataset.h, moved: false }; svg.setPointerCapture(e.pointerId); return; }
+  if (h && get(sel)) { drag = { k: "resize", end: h.dataset.h, moved: false }; ui.bar = false; svg.setPointerCapture(e.pointerId); renderUI(); return; }
   const g = e.target.closest("[data-id]");
   if (g && !g.classList.contains("ink")) {
-    const el = get(g.dataset.id); sel = el.id;
-    const end = SC.nearEnd(el, p);
-    if (end) { drag = { k: "resize", end, moved: false }; svg.setPointerCapture(e.pointerId); renderSvg(); renderPanel(); return; }
-    drag = { k: "move", id: el.id, dx: p.x - el.x, dy: p.y - el.y, x0: e.clientX, y0: e.clientY, moved: false };
-    svg.setPointerCapture(e.pointerId); renderSvg(); renderPanel(); return;
+    const el = get(g.dataset.id), was = sel === el.id && ui.bar; sel = el.id;
+    const end = SC.nearEnd(el, p, 40 * k);
+    if (end) { drag = { k: "resize", end, moved: false }; ui.bar = false; svg.setPointerCapture(e.pointerId); renderSvg(); renderUI(); return; }
+    drag = { k: "move", id: el.id, dx: p.x - el.x, dy: p.y - el.y, x0: e.clientX, y0: e.clientY, moved: false, was };
+    ui.bar = false; svg.setPointerCapture(e.pointerId); renderSvg(); renderUI(); return;
   }
-  sel = null; renderSvg(); renderPanel();
+  drag = { k: "pan", sx: e.clientX, sy: e.clientY, v0: { ...view }, moved: false };
+  svg.setPointerCapture(e.pointerId);
 });
 svg.addEventListener("pointermove", e => {
-  const p = pt(e);
+  if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (gest && ptrs.size >= 2) { doGesture(); return; }
+  if (ignore) return;
+  const p = pt(e), k = kz();
   if (stroke) {
     const last = stroke.pts[stroke.pts.length - 1];
-    if (Math.hypot(p.x - last[0], p.y - last[1]) > 2.5) { stroke.pts.push([Math.round(p.x), Math.round(p.y)]); renderSvg(); }
+    if (Math.hypot(p.x - last[0], p.y - last[1]) > 2.5 * k) { stroke.pts.push([Math.round(p.x), Math.round(p.y)]); renderSvg(); }
     return;
   }
   if (!drag) {
     if (mode === "sel" && e.pointerType === "mouse") {
-      const g = e.target.closest && e.target.closest("[data-id]"), el = g && get(g.dataset.id), n = el && SC.nearEnd(el, p);
+      const g = e.target.closest && e.target.closest("[data-id]"), el = g && get(g.dataset.id), n = el && SC.nearEnd(el, p, 40 * k);
       svg.style.cursor = n ? (SC.horiz(el) ? "ew-resize" : "ns-resize") : (el && el.t !== "ink" ? "move" : "default");
     }
     return;
   }
   if (drag.k === "erase") { eraseAt(e); return; }
+  if (drag.k === "pan") {
+    if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 6) return;
+    drag.moved = true;
+    const s = svg.getScreenCTM().a;
+    setView(drag.v0.x - (e.clientX - drag.sx) / s, drag.v0.y - (e.clientY - drag.sy) / s, view.w);
+    return;
+  }
   const el = get(sel); if (!el) return;
   if (drag.k === "move") {
     if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 5) return;
     drag.moved = true;
-    const r = SC.snapMove(el, p.x - drag.dx, p.y - drag.dy, others(), grid);
+    const r = SC.snapMove(el, p.x - drag.dx, p.y - drag.dy, S.elemente, grid, 18 * k);
     el.x = Math.round(r.x); el.y = Math.round(r.y); guides = { gx: r.gx, gy: r.gy }; renderSvg();
   } else if (drag.k === "resize") {
     drag.moved = true;
     const raw = SC.horiz(el) ? p.x : p.y;
-    const r = free ? { pos: raw, g: null, ax: SC.horiz(el) ? "x" : "y" } : SC.snapEnd(el, raw, others(), grid);
+    const r = free ? { pos: raw, g: null, ax: SC.horiz(el) ? "x" : "y" } : SC.snapEnd(el, raw, S.elemente, grid, 18 * k);
     SC.resize(el, drag.end, Math.round(r.pos));
     guides = r.ax === "x" ? { gx: r.g, gy: null } : { gx: null, gy: r.g }; renderSvg();
   }
 });
-function endDrag() {
+function endPtr(e) {
+  ptrs.delete(e.pointerId);
+  if (gest) { if (ptrs.size < 2) { gest = null; ignore = ptrs.size > 0; renderAll(); } return; }
+  if (ignore) { if (ptrs.size === 0) ignore = false; return; }
   if (stroke) { if (stroke.pts.length < 2) stroke.pts.push([stroke.pts[0][0] + .1, stroke.pts[0][1]]); stroke = null; commit(); renderSvg(); return; }
   if (!drag) return;
-  const moved = drag.moved || drag.k === "erase"; drag = null; guides = null;
-  if (moved) commit();
+  const d = drag; drag = null; guides = null;
+  if (d.k === "move") { if (d.moved) commit(); else ui.bar = !d.was; }
+  else if (d.k === "resize") { if (d.moved) commit(); }
+  else if (d.k === "erase") { if (d.n) commit(); }
+  else if (d.k === "pan" && !d.moved) { sel = null; ui.bar = false; ui.pop = null; }
   renderAll();
 }
-svg.addEventListener("pointerup", endDrag);
-svg.addEventListener("pointercancel", endDrag);
+svg.addEventListener("pointerup", endPtr);
+svg.addEventListener("pointercancel", endPtr);
 function eraseAt(e) {
   const t = document.elementFromPoint(e.clientX, e.clientY), n = t && t.closest && t.closest(".ink");
-  if (n) { S.elemente = S.elemente.filter(x => x.id !== n.dataset.id); renderSvg(); }
+  if (n) { S.elemente = S.elemente.filter(x => x.id !== n.dataset.id); if (drag) drag.n++; renderSvg(); }
 }
 
 /* ---------- bara de sus ---------- */
 function setMode(m) {
-  mode = m; if (m !== "sel") { sel = null; }
+  mode = m; sel = null; ui.bar = false; ui.pop = null;
   $("mSel").setAttribute("aria-pressed", m === "sel"); $("mPen").setAttribute("aria-pressed", m === "pen"); $("mErase").setAttribute("aria-pressed", m === "erase");
-  $("hint").textContent = m === "pen" ? "Scrie sau desenează cu degetul sau cu stiloul." : m === "erase" ? "Atinge scrisul ca să-l ștergi." : "Atinge sau trage un element din stânga pe tablă.";
+  showHint(m === "pen" ? "Scrie sau desenează cu degetul sau cu stiloul." : m === "erase" ? "Atinge scrisul ca să-l ștergi." : HINT_EL);
   renderAll();
 }
+let hintT = null;
+function showHint(t) { const h = $("hint"); h.textContent = t; h.classList.remove("off"); clearTimeout(hintT); hintT = setTimeout(() => h.classList.add("off"), 6000); }
 $("mSel").onclick = () => setMode("sel"); $("mPen").onclick = () => setMode("pen"); $("mErase").onclick = () => setMode("erase");
 function renderPens() {
   $("penCols").innerHTML = PENS.map(c => `<button class="sw${c === pen ? " on" : ""}" data-c="${c}" style="background:${c === "ink" ? "var(--ink)" : c}" aria-label="Creion ${c === "ink" ? "automat" : c}"></button>`).join("");
 }
 $("penCols").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (b) { pen = b.dataset.c; if (mode !== "pen") setMode("pen"); renderPens(); } });
-$("cGrid").onchange = e => { grid = e.target.checked; savePref(); renderSvg(); };
-$("cFree").onchange = e => { free = e.target.checked; savePref(); renderPanel(); $("hint").textContent = free ? "Lungime liberă: segmentele se pot lungi cu orice lungime." : HINT_EL; };
 $("penCustom").addEventListener("input", e => { pen = e.target.value; if (mode !== "pen") setMode("pen"); renderPens(); });
-$("bClear").onclick = () => { if (!S.elemente.length || confirm("Ștergeți tot de pe tablă?")) { S.elemente = []; sel = null; commit(); renderAll(); } };
+
+/* meniul ⋯ */
+function closeMenu() { $("menu").hidden = true; $("bMenu").setAttribute("aria-expanded", "false"); }
+$("bMenu").onclick = e => { e.stopPropagation(); const o = $("menu").hidden; $("menu").hidden = !o; $("bMenu").setAttribute("aria-expanded", String(o)); };
+document.addEventListener("pointerdown", e => { if (!e.target.closest(".menuwrap")) closeMenu(); });
+$("cGrid").onchange = e => { grid = e.target.checked; savePref(); renderSvg(); };
+$("cFree").onchange = e => { free = e.target.checked; savePref(); renderUI(); showHint(free ? "Lungime liberă: segmentele se pot lungi cu orice lungime." : "Lungime pe pătrățele."); };
+$("cPal").onchange = e => { pref.pal = e.target.checked; savePref(); document.body.classList.toggle("nopal", !pref.pal); renderUI(); };
+$("bClear").onclick = () => { closeMenu(); if (!S.elemente.length || confirm("Ștergeți tot de pe tablă?")) { S.elemente = []; sel = null; ui.bar = false; ui.pop = null; commit(); renderAll(); } };
 
 /* ---------- exemplu: problema cu Ana și Camelia ---------- */
 $("bEx").onclick = () => {
@@ -358,19 +514,21 @@ $("bEx").onclick = () => {
   const m = (t, x, y, len, c, l, extra = {}) => ({ id: SC.newId(), t, x, y, len, o: "h", c, l, ...extra });
   S = SC.nou();
   S.elemente = [
-    { id: SC.newId(), t: "txt", x: 160, y: 250, s: 44, c: "#1d2b4f", l: "Ana" },
+    { id: SC.newId(), t: "txt", x: 160, y: 235, s: 44, c: "ink", l: "Ana" },
     m("seg", 280, 200, 8 * U, "#3f6fd1", "23"),
-    { id: SC.newId(), t: "txt", x: 160, y: 410, s: 44, c: "#1d2b4f", l: "Camelia" },
-    m("seg", 280, 360, 8 * U, "#3f6fd1", "23"),
-    m("seg", 280 + 8 * U, 360, 4 * U, "#e09f1f", "12"),
-    m("acol", 280, 300, 12 * U, "#1d2b4f", "?", { l: "?", f: false }),
-    m("lin", 280 + 8 * U, 180, 6 * U, "#1d2b4f", "", { o: "v", dash: true })
+    { id: SC.newId(), t: "txt", x: 160, y: 355, s: 44, c: "ink", l: "Camelia" },
+    m("seg", 280, 320, 8 * U, "#3f6fd1", "23"),
+    m("seg", 280 + 8 * U, 320, 4 * U, "#e09f1f", "12"),
+    m("acol", 280, 280, 12 * U, "ink", "?", { l: "?", f: false }),
+    m("lin", 280 + 8 * U, 160, 6 * U, "ink", "", { o: "v", dash: true })
   ];
-  sel = null; commit(); renderAll();
+  sel = null; ui.bar = false; ui.pop = null; setView(0, 0, W); commit(); renderAll();
 };
 
+$("bEx2").onclick = () => { closeMenu(); $("bEx").onclick(); };
+
 /* ---------- salvare / încărcare ---------- */
-$("bSave").onclick = () => { $("dlgText").value = JSON.stringify(S, null, 1); $("dlgMsg").textContent = ""; $("dlg").showModal(); };
+$("bSave").onclick = () => { closeMenu(); $("dlgText").value = JSON.stringify(S, null, 1); $("dlgMsg").textContent = ""; $("dlg").showModal(); };
 $("bClose").onclick = () => $("dlg").close();
 $("bCopy").onclick = async () => { try { await navigator.clipboard.writeText($("dlgText").value); $("dlgMsg").textContent = "Copiat ✓"; } catch (e) { $("dlgText").select(); $("dlgMsg").textContent = "Selectat. Folosiți Copiază din meniul dispozitivului."; } };
 $("bDown").onclick = () => { try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([$("dlgText").value], { type: "application/json" })); a.download = "scena.json"; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { $("dlgMsg").textContent = "Descărcarea nu e disponibilă aici. Folosiți Copiază."; } };
@@ -378,7 +536,7 @@ $("bLoad").onclick = () => {
   try {
     const d = JSON.parse($("dlgText").value);
     if (!d || d.format !== "scena" || !Array.isArray(d.elemente)) throw new Error("nu este o scenă");
-    S = d; sel = null; commit(); renderAll(); $("dlg").close();
+    S = d; sel = null; ui.bar = false; ui.pop = null; commit(); renderAll(); $("dlg").close();
   } catch (e) { $("dlgMsg").textContent = "Cod invalid: " + e.message; }
 };
 
@@ -387,16 +545,20 @@ addEventListener("keydown", e => {
   const typing = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA";
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); $("bUndo").click(); }
   else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") { e.preventDefault(); $("bRedo").click(); }
-  else if (!typing && sel && (e.key === "Delete" || e.key === "Backspace")) { S.elemente = S.elemente.filter(x => x.id !== sel); sel = null; commit(); renderAll(); }
+  else if (!typing && sel && (e.key === "Delete" || e.key === "Backspace")) { S.elemente = S.elemente.filter(x => x.id !== sel); sel = null; ui.bar = false; ui.pop = null; commit(); renderAll(); }
+  else if (!typing && (e.key === "+" || e.key === "=")) $("bZp").click();
+  else if (!typing && (e.key === "-" || e.key === "_")) $("bZm").click();
+  else if (!typing && e.key === "0") $("zLab").click();
 });
-
-function renderAll() { renderSvg(); renderPanel(); }
+addEventListener("resize", () => renderUI());
 
 /* ---------- pornire ---------- */
 try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.format === "scena" && Array.isArray(d.elemente)) S = d; } catch (e) {}
 if (!S) S = SC.nou();
-grid = pref.grid !== false; free = !!pref.free; $("cGrid").checked = grid; $("cFree").checked = free;
-renderPens(); commit(); renderAll();
+grid = pref.grid !== false; free = !!pref.free;
+$("cGrid").checked = grid; $("cFree").checked = free; $("cPal").checked = pref.pal !== false;
+document.body.classList.toggle("nopal", pref.pal === false);
+renderPens(); commit(); renderAll(); showHint(HINT_EL);
 </script>
 </body>
 </html>

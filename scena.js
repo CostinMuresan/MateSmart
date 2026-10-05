@@ -12,7 +12,7 @@
    probleme și de player-ul de explicații.
    ============================================================ */
 const SC = (() => {
-  const W = 1600, H = 900, U = 40, G = 56, B = 36, T = 18;
+  const W = 1600, H = 900, U = 40, G = U, B = U, T = 18;   // grosimea segmentului = un pătrățel
   const CULORI = [["#e4202d", "Roșu"], ["#e4572e", "Roșu-portocaliu"], ["#f28c28", "Portocaliu"], ["#e09f1f", "Chihlimbar"], ["#f2d024", "Galben"], ["#9acd32", "Verde deschis"], ["#1f9d55", "Verde"], ["#0e7c3a", "Verde închis"], ["#2a9d8f", "Turcoaz"], ["#2bb5c9", "Cyan"], ["#3f6fd1", "Albastru"], ["#1f4fd8", "Albastru intens"], ["#7a5cc7", "Mov"], ["#9b3fb5", "Violet"], ["#c2418b", "Roz"], ["#f58fb1", "Roz deschis"], ["#8b5a2b", "Maro"], ["#6b7280", "Gri"], ["#bcd7f5", "Albastru pal"], ["#c8e6c9", "Verde pal"], ["#ffe0a3", "Galben pal"], ["#f8c9c4", "Roșu pal"], ["#d9d2f2", "Mov pal"], ["#ffffff", "Alb"], ["ink", "Automat (negru pe luminos, alb pe întunecat)"]];
   const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const lum = c => { const m = /^#([0-9a-f]{6})$/i.exec(c); if (!m) return 0; const v = parseInt(m[1], 16); return (0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255)) / 255; };
@@ -23,6 +23,7 @@ const SC = (() => {
   const segFill = c => c === "ink" ? INK : c;
   const txtCol = c => c === "ink" ? "var(--paper,#f6fbff)" : (lum(c) > .62 ? "#1d2b4f" : "#ffffff");
   const horiz = e => e.o !== "v";
+  const FS = 26;   // mărimea numerelor din segment (încap în grosimea de un pătrățel)
   let nid = 0;
   const newId = () => "e" + Date.now().toString(36) + (nid++).toString(36);
   const nou = () => ({ format: "scena", v: 1, id: "sc-" + Date.now().toString(36), w: W, h: H, elemente: [] });
@@ -37,16 +38,16 @@ const SC = (() => {
     return { x1: 0, y1: 0, x2: 0, y2: 0 };
   }
   const axisVals = (e, ax) => { if (e.t === "txt" || e.t === "ink") return []; const b = ext(e); return [...new Set(ax === "x" ? [b.x1, b.x2] : [b.y1, b.y2])]; };
-  function best(mine, others) {
+  function best(mine, others, tol = T) {
     let r = null;
-    for (const m of mine) for (const o of others) { const d = o - m; if (Math.abs(d) <= T && (r === null || Math.abs(d) < Math.abs(r.d))) r = { d, at: o }; }
+    for (const m of mine) for (const o of others) { const d = o - m; if (Math.abs(d) <= tol && (r === null || Math.abs(d) < Math.abs(r.d))) r = { d, at: o }; }
     return r;
   }
   /* mutare: lipește capetele de capetele altor elemente (și aliniază rânduri); altfel, pe grilă */
-  function snapMove(e, x, y, altele, grid) {
+  function snapMove(e, x, y, altele, grid, tol = T) {
     const t = { ...e, x, y }, others = altele.filter(o => o.id !== e.id);
     const ox = [].concat(...others.map(o => axisVals(o, "x"))), oy = [].concat(...others.map(o => axisVals(o, "y")));
-    const bx = best(axisVals(t, "x"), ox), by = best(axisVals(t, "y"), oy), r = { x, y, gx: null, gy: null };
+    const bx = best(axisVals(t, "x"), ox, tol), by = best(axisVals(t, "y"), oy, tol), r = { x, y, gx: null, gy: null };
     if (bx) { r.x += bx.d; r.gx = bx.at; } else if (grid) r.x = Math.round(x / U) * U;
     if (by) { r.y += by.d; r.gy = by.at; } else if (grid) r.y = Math.round(y / U) * U;
     const b = ext({ ...e, x: r.x, y: r.y });
@@ -55,9 +56,9 @@ const SC = (() => {
     return r;
   }
   /* redimensionare: poziția capătului tras */
-  function snapEnd(e, pos, altele, grid) {
+  function snapEnd(e, pos, altele, grid, tol = T) {
     const ax = horiz(e) ? "x" : "y", others = altele.filter(o => o.id !== e.id), vals = [].concat(...others.map(o => axisVals(o, ax)));
-    const b = best([pos], vals);
+    const b = best([pos], vals, tol);
     if (b) return { pos: pos + b.d, g: b.at, ax };
     return { pos: grid ? Math.round(pos / U) * U : pos, g: null, ax };
   }
@@ -97,8 +98,17 @@ const SC = (() => {
   }
   function desen(e) {
     if (e.t === "seg") {
-      const b = ext(e), cx = (b.x1 + b.x2) / 2, cy = (b.y1 + b.y2) / 2;
-      return `<g class="el" data-id="${e.id}"><rect x="${b.x1}" y="${b.y1}" width="${b.x2 - b.x1}" height="${b.y2 - b.y1}" rx="6" style="fill:${segFill(e.c)};stroke:${INK}" stroke-width="3"/><text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="32" font-weight="800" style="fill:${txtCol(e.c)};font-family:'Baloo 2',sans-serif;pointer-events:none">${esc(e.l)}</text></g>`;
+      const b = ext(e), cx = (b.x1 + b.x2) / 2, cy = (b.y1 + b.y2) / 2, l = String(e.l ?? "");
+      const rect = `<rect x="${b.x1}" y="${b.y1}" width="${b.x2 - b.x1}" height="${b.y2 - b.y1}" rx="5" style="fill:${segFill(e.c)};stroke:${INK}" stroke-width="3"/>`;
+      let txt = "";
+      if (l) {
+        const w = l.length * FS * .66, fits = horiz(e) ? w <= e.len - 14 : w <= G - 8;
+        const f = "font-weight:800;font-family:'Baloo 2',sans-serif;pointer-events:none";
+        if (fits) txt = `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="${FS}" style="fill:${txtCol(e.c)};${f}">${esc(l)}</text>`;
+        else if (horiz(e)) txt = `<text x="${cx}" y="${b.y1 - 12}" text-anchor="middle" font-size="${FS + 6}" style="fill:${INK};${f}">${esc(l)}</text>`;
+        else txt = `<text x="${b.x2 + 14}" y="${cy}" text-anchor="start" dominant-baseline="central" font-size="${FS + 6}" style="fill:${INK};${f}">${esc(l)}</text>`;
+      }
+      return `<g class="el" data-id="${e.id}">${rect}${txt}</g>`;
     }
     if (e.t === "lin") {
       const b = ext(e);

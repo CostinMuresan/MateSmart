@@ -36,5 +36,10 @@ Toate fișierele trebuie să stea în același folder.
 Administrare, Exportă probleme.js, Copiază; în GitHub deschideți `probleme.js`, Edit (creionul), lipiți codul, Commit changes.
 Problemele nepublicate încă se pot vedea pe tablă la `probleme.html#ciorna` (același browser).
 
+## Whiteboard: folosire
+- Tabla rămâne liberă: **atingeți un element** ca să apară mini-bara de lângă el (culoare, etichetă, lungime, rotire, duplicare, ștergere). Tragerea unui element nu deschide nimic.
+- **Zoom:** ciupire cu două degete, butoanele − / + din bara de sus, rotița mouse-ului. Butonul cu procent (ex. 100%) readuce tabla întreagă. Cu un deget pe fundal gol, tabla se deplasează.
+- Meniul „⋯” conține grila, lungimea liberă, ascunderea paletei de elemente, salvarea, ștergerea totală și tema.
+
 ## Whiteboard: scena
 Desenul se salvează ca JSON (butonul „Salvează / Încarcă”), într-un spațiu de 1600 × 900 de unități, independent de ecran. Se salvează și automat, în browserul curent.
