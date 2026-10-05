@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Matematică pe tablă – clasa a II-a</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --paper:#f6fbff; --grid:#cfe3f4; --ink:#1d2b4f; --muted:#52638a;
+  --panel:#ffffff; --line:#b9cde4; --margin:#e8707a;
+  --g1:#e4572e; --g2:#2a9d8f; --g3:#7a5cc7; --g4:#e09f1f;
+  --ok:#1f9d55; --bad:#d64545;
+  --font:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#16213a; --grid:#243556; --ink:#eef3ff; --muted:#a9b8d8;
+    --panel:#1e2c4d; --line:#3b4f7a; --ok:#4cc77f; --bad:#ff7b7b;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#16213a; --grid:#243556; --ink:#eef3ff; --muted:#a9b8d8;
+  --panel:#1e2c4d; --line:#3b4f7a; --ok:#4cc77f; --bad:#ff7b7b;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;height:100%;font-family:var(--font);color:var(--ink);
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px;overflow-x:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+body::before{content:"";position:fixed;left:56px;top:0;bottom:0;width:2px;background:var(--margin);opacity:.55;pointer-events:none}
+#app{position:relative;min-height:100vh;display:flex;flex-direction:column;padding:14px 20px 120px 78px;gap:14px}
+@media (max-width:700px){#app{padding-left:20px} body::before{display:none}}
+
+.top{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;max-width:100%}
+.tab{font:800 20px/1 var(--font);min-width:56px;height:56px;padding:0 12px;border-radius:28px;border:3px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.statement{flex:1 1 420px;background:var(--panel);border:3px solid var(--ink);border-radius:16px 16px 16px 4px;padding:12px 18px;font-size:clamp(20px,2.6vw,30px);line-height:1.25;font-weight:500}
+.statement b{font-weight:800}
+.statement .opt{margin-top:6px;font-size:.8em;color:var(--muted)}
+.statement .meta{margin-top:8px;font-size:.55em;line-height:1.35;color:var(--muted);border-top:2px dotted var(--line);padding-top:6px}
+.statement .meta .m{display:inline-block;background:var(--ink);color:var(--paper);border-radius:8px;padding:0 8px;font-weight:800;margin-right:6px}
+
+#tabla{--s:20px;display:block}
+.err{background:rgba(214,69,69,.12);color:var(--bad);border:3px solid var(--bad);border-radius:14px;padding:12px 16px;font-size:22px;font-weight:700}
+
+.help{background:var(--panel);border:3px solid var(--ink);border-radius:16px;padding:6px 18px;font-size:clamp(20px,2.4vw,28px);line-height:1.35}
+.help:empty{display:none}
+
+/* ---- explicație animată ---- */
+.story{background:var(--panel);border:4px solid var(--ink);border-radius:20px;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.story[hidden]{display:none}
+.smeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.mtabs{display:flex;gap:8px;flex-wrap:wrap}
+.stage{--s:28px;min-height:190px;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;padding:6px}
+.cap{margin:0;font-size:clamp(22px,2.7vw,32px);line-height:1.3;font-weight:500;text-align:center;min-height:2.6em;display:grid;place-items:center}
+.sctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
+.vnote{font-size:18px;color:var(--bad);text-align:center;margin:0}
+.vnote:empty{display:none}
+
+.bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 16px);background:var(--panel);border:3px solid var(--ink);border-radius:20px;padding:8px 10px}
+.btn{font:700 20px/1 var(--font);min-height:56px;padding:0 18px;border-radius:14px;cursor:pointer;border:3px solid var(--ink);background:var(--panel);color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn[aria-pressed="true"]{background:#ffd447;color:#1d2b4f}
+.btn[disabled]{opacity:.5;cursor:default}
+.sw{width:56px;padding:0;position:relative}
+.sw i{position:absolute;inset:10px;border-radius:50%;background:var(--c)}
+.sw[aria-checked="true"]{outline:4px solid #ffd447;outline-offset:1px}
+.pen-tools{display:none;gap:8px}
+.pen-tools.on{display:flex}
+.sep{width:3px;background:var(--line);border-radius:2px;margin:4px 2px}
+button:focus-visible{outline:4px solid #ffd447;outline-offset:2px}
+canvas#ink{position:fixed;inset:0;width:100%;height:100%;z-index:20;pointer-events:none;touch-action:none}
+canvas#ink.on{pointer-events:auto;cursor:crosshair}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <div class="tabs" id="tabs" role="group" aria-label="Alege problema"></div>
+    <div class="statement" id="statement"></div>
+  </div>
+
+  <section class="story" id="story" hidden aria-label="Explicație pas cu pas">
+    <div class="smeta">
+      <div class="mtabs" id="mtabs"></div>
+      <button class="btn" id="exClose">Închide explicația</button>
+    </div>
+    <div class="stage" id="stage" aria-live="polite"></div>
+    <p class="cap" id="cap"></p>
+    <p class="vnote" id="vnote"></p>
+    <div class="sctl">
+      <button class="btn" id="exPrev">◀ Înapoi</button>
+      <button class="btn primary" id="exPlay">⏸ Pauză</button>
+      <button class="btn" id="exNext">Înainte ▶</button>
+      <button class="btn" id="exVoice" aria-pressed="true">🔊 Voce</button>
+      <span id="exPos" style="font-weight:800;font-size:22px"></span>
+    </div>
+  </section>
+
+  <div id="tabla"></div>
+  <div class="help" id="help" aria-live="polite"></div>
+</div>
+
+<canvas id="ink"></canvas>
+
+<div class="bar" id="bar">
+  <button class="btn primary" id="bExplain">Explică pas cu pas</button>
+  <button class="btn" id="bCheck">Verifică</button>
+  <button class="btn" id="bReset">De la capăt</button>
+  <span class="sep"></span>
+  <button class="btn" id="bPen" aria-pressed="false">Scrie pe tablă</button>
+  <span class="pen-tools" id="penTools">
+    <button class="btn sw" role="radio" aria-checked="true" aria-label="Roșu" style="--c:#e4202d" data-c="#e4202d"><i></i></button>
+    <button class="btn sw" role="radio" aria-checked="false" aria-label="Albastru" style="--c:#1f4fd8" data-c="#1f4fd8"><i></i></button>
+    <button class="btn sw" role="radio" aria-checked="false" aria-label="Verde" style="--c:#1f9d55" data-c="#1f9d55"><i></i></button>
+    <button class="btn sw" role="radio" aria-checked="false" aria-label="Negru" style="--c:#111" data-c="#111111"><i></i></button>
+    <button class="btn" id="bEraser" aria-pressed="false">Radieră</button>
+    <button class="btn" id="bClear">Șterge scrisul</button>
+  </span>
+</div>
+
+<script src="motor.js"></script>
+<script src="tipuri.js"></script>
+<script src="probleme.js"></script>
+<script>
+/* ============ lista de probleme (sau ciorna din administrare) ============ */
+let LISTA = PROBLEME, CIORNA = false;
+if (location.hash === "#ciorna") {
+  try { const d = JSON.parse(localStorage.getItem("matematica.probleme.draft")); if (Array.isArray(d) && d.length) { LISTA = d; CIORNA = true; } } catch (e) {}
+}
+const $ = id => document.getElementById(id);
+let P, T, TAB = null;
+const api = { mesaj: h => { $("help").innerHTML = h || ""; } };
+
+function load(i) {
+  closeEx();
+  P = LISTA[i]; T = tipDe(P); TAB = null; api.mesaj("");
+  document.querySelectorAll(".tab").forEach((t, k) => t.setAttribute("aria-pressed", k === i));
+  $("statement").innerHTML = P.enunt
+    + (P.optiuni ? `<div class="opt">${esc(P.optiuni)}</div>` : "")
+    + `<div class="meta"><span class="m">${esc(T ? T.nume : "tip necunoscut")}</span>${(P.program || []).length ? `Programa clasei a II-a: ${(P.program || []).map(c => { const k = codeOf(c); return `${k} ${PROG[k] || ""}`; }).join(" · ")}` : ""}</div>`;
+  const box = document.createElement("div");
+  $("tabla").innerHTML = ""; $("tabla").appendChild(box);
+  const err = T ? T.valideaza(P) : ["Tip de problemă necunoscut: " + P.tip];
+  if (err.length) { box.innerHTML = `<div class="err">Această problemă are erori: ${err.map(esc).join(" ")}</div>`; $("bExplain").disabled = $("bCheck").disabled = true; return; }
+  $("bExplain").disabled = $("bCheck").disabled = false;
+  TAB = T.tabla(P, box, api);
+}
+$("bReset").onclick = () => load(LISTA.indexOf(P));
+$("bCheck").onclick = () => { if (TAB) TAB.verifica(); };
+
+/* ============ voce ============ */
+const VOICE = { on: true, voice: null, cur: null };
+function pickVoice() {
+  if (!("speechSynthesis" in window)) return;
+  VOICE.voice = speechSynthesis.getVoices().find(v => /^ro/i.test(v.lang)) || null;
+  updVoiceUI();
+}
+function stopSpeech() { if ("speechSynthesis" in window) speechSynthesis.cancel(); }
+function speak(text, onend) {
+  if (!VOICE.on || !VOICE.voice) return false;
+  stopSpeech();
+  const u = new SpeechSynthesisUtterance(text);
+  u.voice = VOICE.voice; u.lang = VOICE.voice.lang; u.rate = .88; u.pitch = 1.05;
+  u.onend = onend; u.onerror = onend; VOICE.cur = u;
+  speechSynthesis.speak(u); return true;
+}
+function updVoiceUI() {
+  const b = $("exVoice"), note = $("vnote");
+  if (!VOICE.voice) {
+    b.textContent = "🔇 Fără voce"; b.disabled = true; b.setAttribute("aria-pressed", "false");
+    note.textContent = "Acest dispozitiv nu are o voce în limba română. Explicația rulează doar scris.";
+  } else {
+    b.disabled = false; b.textContent = VOICE.on ? "🔊 Voce" : "🔇 Voce oprită";
+    b.setAttribute("aria-pressed", VOICE.on); note.textContent = "";
+  }
+}
+if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; } else updVoiceUI();
+$("exVoice").onclick = () => { VOICE.on = !VOICE.on; if (!VOICE.on) stopSpeech(); updVoiceUI(); if (EX.open) showStep(); };
+
+/* ============ player explicație ============ */
+const EX = { open: false, methods: [], m: 0, i: 0, playing: false, run: 0 };
+function openEx() {
+  if (!TAB) return;
+  EX.methods = metodeFor(P); EX.m = 0; EX.i = 0; EX.open = true; EX.playing = true;
+  $("story").hidden = false; renderMethodTabs(); showStep();
+  $("story").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function closeEx() { EX.open = false; EX.playing = false; EX.run++; stopSpeech(); $("story").hidden = true; }
+function renderMethodTabs() {
+  const box = $("mtabs"); box.innerHTML = "";
+  EX.methods.forEach((m, k) => {
+    const b = document.createElement("button"); b.className = "btn"; b.textContent = m.nume;
+    b.setAttribute("aria-pressed", k === EX.m);
+    b.onclick = () => { EX.m = k; EX.i = 0; EX.playing = true; renderMethodTabs(); showStep(); };
+    box.appendChild(b);
+  });
+}
+function updCtl() {
+  const last = EX.methods[EX.m].pasi.length - 1;
+  $("exPlay").textContent = EX.playing ? "⏸ Pauză" : (EX.i === last ? "↻ Din nou" : "▶ Redă");
+  $("exPrev").disabled = EX.i === 0; $("exNext").disabled = EX.i === last;
+  $("exPos").textContent = `${EX.i + 1} / ${last + 1}`;
+}
+function showStep() {
+  const st = EX.methods[EX.m].pasi[EX.i];
+  $("stage").innerHTML = renderViz(st.viz);
+  $("cap").textContent = st.text;
+  if (st.aplica && TAB) TAB.arataSolutia();
+  updCtl();
+  const run = ++EX.run; stopSpeech();
+  if (!EX.playing) return;
+  const advance = () => { if (run !== EX.run || !EX.playing) return; setTimeout(() => { if (run === EX.run && EX.playing) goNext(true); }, 1300); };
+  if (!speak(st.text, advance)) setTimeout(advance, 1500 + st.text.length * 65);
+}
+function goNext(auto) {
+  const last = EX.methods[EX.m].pasi.length - 1;
+  if (EX.i < last) { EX.i++; showStep(); } else if (auto) { EX.playing = false; updCtl(); }
+}
+$("bExplain").onclick = openEx;
+$("exClose").onclick = closeEx;
+$("exNext").onclick = () => goNext(false);
+$("exPrev").onclick = () => { if (EX.i > 0) { EX.i--; showStep(); } };
+$("exPlay").onclick = () => {
+  const last = EX.methods[EX.m].pasi.length - 1;
+  if (EX.playing) { EX.playing = false; EX.run++; stopSpeech(); updCtl(); return; }
+  if (EX.i === last) EX.i = 0;
+  EX.playing = true; showStep();
+};
+
+/* ============ scris pe tablă ============ */
+const cv = $("ink"), ctx = cv.getContext("2d");
+let penOn = false, color = "#e4202d", eraser = false, drawing = false, last = null;
+function sizeCanvas() {
+  const r = window.devicePixelRatio || 1;
+  const img = cv.width ? ctx.getImageData(0, 0, cv.width, cv.height) : null;
+  cv.width = innerWidth * r; cv.height = innerHeight * r;
+  ctx.setTransform(r, 0, 0, r, 0, 0);
+  if (img) ctx.putImageData(img, 0, 0);
+}
+sizeCanvas(); addEventListener("resize", sizeCanvas);
+$("bPen").onclick = () => {
+  penOn = !penOn;
+  $("bPen").setAttribute("aria-pressed", penOn);
+  $("bPen").textContent = penOn ? "Atinge tabla" : "Scrie pe tablă";
+  cv.classList.toggle("on", penOn); $("penTools").classList.toggle("on", penOn);
+};
+document.querySelectorAll(".sw").forEach(b => b.onclick = () => {
+  color = b.dataset.c; eraser = false; $("bEraser").setAttribute("aria-pressed", false);
+  document.querySelectorAll(".sw").forEach(x => x.setAttribute("aria-checked", x === b));
+});
+$("bEraser").onclick = () => { eraser = !eraser; $("bEraser").setAttribute("aria-pressed", eraser); };
+$("bClear").onclick = () => ctx.clearRect(0, 0, innerWidth, innerHeight);
+cv.addEventListener("pointerdown", e => { drawing = true; last = [e.clientX, e.clientY]; cv.setPointerCapture(e.pointerId); stroke(e, true); });
+cv.addEventListener("pointermove", e => { if (drawing) stroke(e, false); });
+["pointerup", "pointercancel"].forEach(t => cv.addEventListener(t, () => { drawing = false; last = null; }));
+function stroke(e, dot) {
+  ctx.globalCompositeOperation = eraser ? "destination-out" : "source-over";
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  const w = eraser ? 44 : (e.pointerType === "pen" && e.pressure ? 3 + e.pressure * 6 : 6);
+  ctx.lineWidth = w;
+  ctx.beginPath(); ctx.moveTo(last[0], last[1]); ctx.lineTo(e.clientX, e.clientY); ctx.stroke();
+  if (dot) { ctx.beginPath(); ctx.arc(e.clientX, e.clientY, w / 2, 0, 7); ctx.fill(); }
+  last = [e.clientX, e.clientY];
+}
+
+/* ============ pornire ============ */
+LISTA.forEach((p, i) => {
+  const b = document.createElement("button"); b.className = "tab"; b.textContent = p.eticheta;
+  b.setAttribute("aria-label", "Problema " + p.eticheta);
+  b.onclick = () => load(i); $("tabs").appendChild(b);
+});
+load(0);
+if (CIORNA) { const b = document.createElement("div"); b.textContent = "Ciornă din administrare"; b.style.cssText = "position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:10px;z-index:40;background:#ffd447;color:#1d2b4f;font:800 16px var(--font);padding:4px 12px;border-radius:12px;border:2px solid #1d2b4f"; document.body.appendChild(b); }
+</script>
+</body>
+</html>

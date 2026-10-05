@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Administrare probleme – Matematică pe tablă</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --paper:#f3f7fb; --panel:#fff; --ink:#1d2b4f; --muted:#5a6a8c; --line:#c6d4e6;
+  --ok:#1f9d55; --bad:#d64545;
+  --g1:#e4572e; --g2:#2a9d8f; --g3:#7a5cc7; --g4:#e09f1f;
+  --font:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--paper:#121b30;--panel:#1c2a4a;--ink:#eef3ff;--muted:#a9b8d8;--line:#3b4f7a;--ok:#4cc77f;--bad:#ff7b7b}
+}
+:root[data-theme="dark"]{--paper:#121b30;--panel:#1c2a4a;--ink:#eef3ff;--muted:#a9b8d8;--line:#3b4f7a;--ok:#4cc77f;--bad:#ff7b7b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:500 17px/1.4 var(--font)}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--panel);border-bottom:3px solid var(--ink)}
+header h1{margin:0;font-size:24px;font-weight:800}
+#saved{color:var(--muted);font-size:15px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:16px 18px 40px;max-width:1600px;margin:0 auto}
+@media (min-width:1000px){.layout{grid-template-columns:minmax(380px,520px) minmax(0,1fr);align-items:start}.preview{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:20px;font-weight:800}
+.card h3{margin:14px 0 6px;font-size:17px;font-weight:800}
+.list{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{font:800 17px var(--font);min-width:46px;height:46px;padding:0 12px;border-radius:23px;border:2px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.btn{font:700 16px var(--font);min-height:44px;padding:0 14px;border-radius:10px;border:2px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.btn.small{min-height:36px;padding:0 10px;font-size:15px}
+label{display:block;margin:10px 0 4px;font-weight:700}
+.hint{font-weight:500;color:var(--muted);font-size:14px;margin:2px 0 0}
+input[type=text],select,textarea{width:100%;font:500 17px var(--font);padding:8px 10px;border:2px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
+textarea{min-height:84px;resize:vertical}
+textarea.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;min-height:64px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #ffd447;outline-offset:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.checks{display:grid;gap:4px}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-weight:500;margin:0}
+.checks input{margin-top:5px;width:18px;height:18px}
+.msg{padding:8px 12px;border-radius:10px;margin:8px 0;font-weight:700}
+.msg.ok{background:rgba(31,157,85,.14);color:var(--ok)}
+.msg.bad{background:rgba(214,69,69,.14);color:var(--bad)}
+.stepbox{border:2px dashed var(--line);border-radius:12px;padding:10px;margin:8px 0}
+.stepbox .top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:800}
+details summary{cursor:pointer;font-weight:700}
+pre.help{white-space:pre-wrap;font:500 14px/1.5 ui-monospace,Menlo,Consolas,monospace;background:var(--paper);padding:10px;border-radius:10px;border:2px solid var(--line)}
+dialog{width:min(900px,94vw);border:3px solid var(--ink);border-radius:16px;background:var(--panel);color:var(--ink);padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog textarea{min-height:360px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+
+/* previzualizare */
+.stmt{background:var(--paper);border:2px solid var(--ink);border-radius:12px;padding:10px 14px;font-size:20px;line-height:1.3}
+.stmt .opt{margin-top:4px;font-size:.8em;color:var(--muted)}
+.tag{display:inline-block;background:var(--ink);color:var(--paper);font-weight:800;font-size:13px;border-radius:8px;padding:1px 8px;margin-bottom:6px}
+#prevBoard{--s:13px;padding:10px;border:2px solid var(--line);border-radius:12px;background:var(--paper);overflow:auto}
+.pstep{border:2px solid var(--line);border-radius:12px;padding:8px 10px;margin:10px 0;background:var(--paper)}
+.pstep .n{font-weight:800;color:var(--muted);font-size:14px}
+.stage{--s:15px;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;padding:6px}
+.cap{margin:4px 0 0;text-align:center;font-size:18px}
+.badge{display:inline-block;background:#ffd447;color:#1d2b4f;font-weight:800;font-size:13px;border-radius:8px;padding:1px 8px;margin-left:6px}
+.help{padding:0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Administrare probleme</h1>
+  <div class="list">
+    <span id="saved"></span>
+    <button class="btn" id="bImport">Încarcă probleme.js</button>
+    <button class="btn primary" id="bExport">Exportă probleme.js</button>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="editor">
+    <div class="card">
+      <h2>Probleme</h2>
+      <div class="list" id="plist"></div>
+      <div class="list" style="margin-top:10px">
+        <select id="newType" style="width:auto" aria-label="Tipul problemei noi"></select>
+        <button class="btn small" id="bAdd">+ Problemă nouă</button>
+        <button class="btn small" id="bDup">Duplică</button>
+        <button class="btn small" id="bUp">◀ Mută</button>
+        <button class="btn small" id="bDown">Mută ▶</button>
+        <button class="btn small danger" id="bDel">Șterge</button>
+      </div>
+    </div>
+    <div id="form"></div>
+  </div>
+
+  <div class="preview">
+    <div class="card" id="preview"></div>
+  </div>
+</div>
+
+<dialog id="dlgExport">
+  <h2 style="margin-top:0">probleme.js</h2>
+  <p class="hint">Înlocuiți conținutul fișierului <b>probleme.js</b> din repository cu acest cod, apoi salvați (commit).</p>
+  <textarea id="exportText" readonly></textarea>
+  <div class="list" style="margin-top:10px">
+    <button class="btn primary" id="bCopy">Copiază codul</button>
+    <button class="btn" id="bDownload">Descarcă fișierul</button>
+    <button class="btn" id="bCloseExp">Închide</button>
+  </div>
+  <p class="hint" id="expMsg"></p>
+</dialog>
+
+<dialog id="dlgImport">
+  <h2 style="margin-top:0">Încarcă probleme existente</h2>
+  <p class="hint">Alegeți fișierul <b>probleme.js</b> (înlocuiește lista curentă) sau lipiți codul mai jos.</p>
+  <input type="file" id="fileIn" accept=".js,.json,text/javascript,application/json">
+  <textarea id="importText" placeholder="Lipiți aici conținutul probleme.js"></textarea>
+  <div class="list" style="margin-top:10px">
+    <button class="btn primary" id="bDoImport">Încarcă</button>
+    <button class="btn" id="bResetOrig">Revino la lista din aplicație</button>
+    <button class="btn" id="bCloseImp">Închide</button>
+  </div>
+  <p class="hint" id="impMsg"></p>
+</dialog>
+
+<script src="motor.js"></script>
+<script src="tipuri.js"></script>
+<script src="probleme.js"></script>
+<script>
+const KEY = "matematica.probleme.draft";
+const $ = id => document.getElementById(id);
+const clone = o => JSON.parse(JSON.stringify(o));
+let D, cur = 0, saveT = null, prevT = null;
+
+/* ============ conversii câmp ↔ text ============ */
+const SPLIT = /[,;\s]+/;
+const CONV = {
+  text: { de: v => v ?? "", din: s => s },
+  numere: { de: v => (v || []).join(", "), din: s => s.split(SPLIT).filter(Boolean).map(Number).filter(Number.isInteger) },
+  sume: { de: v => (v || []).map(x => x === null ? "?" : x).join(", "), din: s => s.split(SPLIT).filter(Boolean).map(t => /^[?xX]$/.test(t) ? null : Number(t)).map(v => (v === null || Number.isInteger(v)) ? v : NaN) },
+  numar: { de: v => (v === null || v === undefined) ? "?" : (Number.isNaN(v) ? "" : String(v)), din: s => { s = s.trim(); if (s === "" || s === "?") return null; const n = Number(s); return Number.isInteger(n) ? n : NaN; } },
+  linii: { de: v => (v || []).join("\n"), din: s => s.split("\n").map(x => x.trim()).filter(Boolean) }
+};
+
+/* desenul pașilor scriși de mână */
+function vizToText(rows) {
+  return (rows || []).map(r => r.map(el => {
+    if (typeof el === "number") return String(el);
+    if (typeof el === "string") return /^\d+$/.test(el) ? `"${el}"` : el.replace(/ /g, "_");
+    if (el.lab !== undefined) return `{${el.lab}|${(el.t || "").replace(/ /g, "_")}}`;
+    if (el.p) return `[${el.p[0]},${el.p[1]}|${(el.e || "").replace(/ /g, "_").replace(/^=_/, "=")}|${el.ok === true ? "ok" : el.ok === false ? "no" : ""}]`;
+    return "";
+  }).join(" ")).join("\n");
+}
+function textToViz(txt) {
+  return txt.split("\n").map(l => l.trim()).filter(Boolean).map(line => line.split(/\s+/).map(t => {
+    let m;
+    if ((m = t.match(/^\[(\d+),(\d+)(?:\|([^|\]]*))?(?:\|(ok|no))?\]$/))) {
+      let e = (m[3] || "").replace(/_/g, " "); if (/^=\S/.test(e)) e = "= " + e.slice(1);
+      const o = { p: [+m[1], +m[2]], e }; if (m[4] === "ok") o.ok = true; if (m[4] === "no") o.ok = false; return o;
+    }
+    if ((m = t.match(/^\{(\d+)\|([^}]*)\}$/))) return { lab: +m[1], t: m[2].replace(/_/g, " ") };
+    if ((m = t.match(/^"(.*)"$/))) return m[1];
+    if (/^\d+$/.test(t)) return +t;
+    return t.replace(/_/g, " ");
+  }));
+}
+
+/* ============ date ============ */
+function loadDraft() {
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(d) && d.length) return d; } catch (e) {}
+  return clone(PROBLEME);
+}
+function persist() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    try { localStorage.setItem(KEY, JSON.stringify(D)); $("saved").textContent = "Salvat în acest browser ✓"; }
+    catch (e) { $("saved").textContent = "Nu s-a putut salva local – exportați codul"; }
+  }, 250);
+}
+const TIP = p => tipDe(p);
+function validate(p) {
+  const err = [];
+  if (!p.enunt || !p.enunt.trim()) err.push("Scrieți enunțul.");
+  const T = TIP(p);
+  if (!T) return ["Tip de problemă necunoscut: " + p.tip];
+  return err.concat(T.valideaza(p));
+}
+
+/* ============ listă ============ */
+function renderList() {
+  const box = $("plist"); box.innerHTML = "";
+  D.forEach((p, i) => {
+    const b = document.createElement("button"); b.className = "pill"; b.textContent = p.eticheta || "?";
+    b.title = TIP(p) ? TIP(p).nume : "tip necunoscut";
+    b.setAttribute("aria-pressed", i === cur);
+    b.onclick = () => { cur = i; renderAll(); };
+    box.appendChild(b);
+  });
+}
+function nextLabel() {
+  const used = new Set(D.map(p => p.eticheta));
+  for (let i = 1; i < 999; i++) if (!used.has("N" + i)) return "N" + i;
+}
+$("newType").innerHTML = Object.values(TIPURI).map(t => `<option value="${t.id}">${esc(t.nume)}</option>`).join("");
+$("bAdd").onclick = () => {
+  const T = TIPURI[$("newType").value], l = nextLabel();
+  D.push({ id: l, eticheta: l, tip: T.id, enunt: "Scrieți aici enunțul problemei.", ...T.nou(), program: T.program.slice() });
+  cur = D.length - 1; persist(); renderAll();
+};
+$("bDup").onclick = () => { const c = clone(D[cur]), l = nextLabel(); c.id = l; c.eticheta = l; D.splice(cur + 1, 0, c); cur++; persist(); renderAll(); };
+$("bUp").onclick = () => { if (cur > 0) { [D[cur - 1], D[cur]] = [D[cur], D[cur - 1]]; cur--; persist(); renderAll(); } };
+$("bDown").onclick = () => { if (cur < D.length - 1) { [D[cur + 1], D[cur]] = [D[cur], D[cur + 1]]; cur++; persist(); renderAll(); } };
+$("bDel").onclick = () => {
+  if (D.length < 2) { alert("Trebuie să rămână cel puțin o problemă."); return; }
+  if (!confirm(`Ștergeți problema „${D[cur].eticheta}”?`)) return;
+  D.splice(cur, 1); cur = Math.max(0, cur - 1); persist(); renderAll();
+};
+
+/* ============ formular ============ */
+function fieldHtml(c, p) {
+  const id = "f-" + c.k, v = p[c.k], hint = c.a ? `<p class="hint">${esc(c.a)}</p>` : "";
+  let inp;
+  if (c.t === "alege") inp = `<select id="${id}" data-f="${c.k}" data-t="alege">${c.o.map(([val, lab]) => `<option value="${esc(val)}"${(v ?? c.o[0][0]) === val ? " selected" : ""}>${esc(lab)}</option>`).join("")}</select>`;
+  else if (c.t === "linii") inp = `<textarea id="${id}" data-f="${c.k}" data-t="linii" spellcheck="false">${esc(CONV.linii.de(v))}</textarea>`;
+  else inp = `<input type="text" id="${id}" data-f="${c.k}" data-t="${c.t}" value="${esc(CONV[c.t].de(v))}">`;
+  return `<label for="${id}">${esc(c.e)}</label>${inp}${hint}`;
+}
+function renderForm() {
+  const p = D[cur], T = TIP(p);
+  const checked = code => (p.program || []).some(s => codeOf(s) === code);
+  const err = validate(p), auto = (T && !err.length) ? T.pasi(p) : [];
+  $("form").innerHTML = `
+  <div class="card">
+    <h2>Problema ${esc(p.eticheta)}</h2>
+    <div class="row2">
+      <div><label for="f-et">Etichetă (pe buton)</label><input type="text" id="f-et" data-c="eticheta" maxlength="8" value="${esc(p.eticheta)}"></div>
+      <div><label for="f-tip">Metoda de rezolvare (tipul)</label>
+        <select id="f-tip" data-c="tip">${Object.values(TIPURI).map(t => `<option value="${t.id}"${(p.tip || "grupe") === t.id ? " selected" : ""}>${esc(t.nume)}</option>`).join("")}</select></div>
+    </div>
+    <label for="f-en">Enunț</label>
+    <textarea id="f-en" data-c="enunt">${esc(p.enunt)}</textarea>
+    <div class="list" style="margin-top:6px"><button class="btn small" data-act="bold" type="button">Îngroașă selecția</button><span class="hint">Se folosesc etichete simple de tip &lt;b&gt;…&lt;/b&gt;.</span></div>
+    <div class="row2">
+      <div><label for="f-op">Variante de răspuns (opțional)</label><input type="text" id="f-op" data-c="optiuni" value="${esc(p.optiuni || "")}"></div>
+      <div><label for="f-ra">Răspuns corect (opțional)</label><input type="text" id="f-ra" data-c="raspuns" value="${esc(p.raspuns || "")}"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Datele problemei${T ? ` – ${esc(T.nume)}` : ""}</h2>
+    ${T ? T.campuri.map(c => fieldHtml(c, p)).join("") : `<div class="msg bad">Tip necunoscut.</div>`}
+  </div>
+
+  <div class="card">
+    <h2>Legătura cu programa clasei a II-a</h2>
+    <div class="checks">${Object.keys(PROG).map(c => `<label><input type="checkbox" data-prog="${c}"${checked(c) ? " checked" : ""}><span>${c} ${esc(PROG[c])}</span></label>`).join("")}</div>
+  </div>
+
+  <div class="card">
+    <h2>Explicația generată automat</h2>
+    <p class="hint">Se calculează din datele problemei. Puteți rescrie textul unui pas (vocea îl citește exact cum îl scrieți). Lăsați gol pentru textul automat.</p>
+    ${auto.length ? auto.map((s, i) => `<div class="stepbox"><div class="top">Pasul ${i + 1}</div><textarea data-aj="${i}" placeholder="${esc(s.text)}">${esc((p.ajustari || {})[i] || "")}</textarea></div>`).join("") : `<div class="msg bad">Completați corect problema ca să apară pașii.</div>`}
+  </div>
+
+  <div class="card">
+    <h2>Metode suplimentare (scrise de dumneavoastră)</h2>
+    <p class="hint">De exemplu „Metoda 2: încercări”. Fiecare pas are un text și, opțional, un desen animat.</p>
+    <details style="margin:8px 0"><summary>Cum se scrie desenul pasului</summary>
+<pre class="help">Fiecare rând de text este un rând pe tablă. Elementele se separă prin spațiu.
+  1 2 3            jetoane colorate cu numere
+  + = × −          simboluri
+  "21"             un număr mare, ca simbol (nu jeton)
+  [2,6|=8|ok]      pereche 2+6 cu eticheta „= 8”, bifată ✓
+  [3,6|=9|no]      pereche respinsă ✗   ([2,6|=8] fără bifă)
+  {21|descăzut}    număr cu denumire dedesubt
+  _                înlocuiește spațiul din etichete
+Exemplu:
+  [2,6|=8|ok] [4,5|=9|ok] [1,3|=4|ok]
+  "8" + "9" + "4" = "21"</pre></details>
+    <div id="methods">${(p.metode || []).map((m, mi) => methodHtml(m, mi)).join("")}</div>
+    <button class="btn" data-act="addMethod" type="button">+ Adaugă o metodă</button>
+  </div>`;
+}
+function methodHtml(m, mi) {
+  return `<div class="stepbox">
+    <div class="top"><span>Metoda ${mi + 2}</span><button class="btn small danger" data-act="delMethod" data-m="${mi}" type="button">Șterge metoda</button></div>
+    <label>Titlu</label><input type="text" data-m="${mi}" data-mf="nume" value="${esc(m.nume)}">
+    ${(m.pasi || []).map((s, si) => `<div class="stepbox">
+      <div class="top"><span>Pasul ${si + 1}</span><button class="btn small danger" data-act="delStep" data-m="${mi}" data-s="${si}" type="button">Șterge pasul</button></div>
+      <label>Ce spune învățătorul / vocea</label>
+      <textarea data-m="${mi}" data-s="${si}" data-sf="text">${esc(s.text)}</textarea>
+      <label>Desen animat (opțional)</label>
+      <textarea class="mono" data-m="${mi}" data-s="${si}" data-sf="viz" spellcheck="false">${esc(vizToText(s.viz))}</textarea>
+      <label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" data-m="${mi}" data-s="${si}" data-sf="aplica"${s.aplica ? " checked" : ""} style="width:18px;height:18px"> La acest pas, arată soluția pe tablă</label>
+    </div>`).join("")}
+    <button class="btn small" data-act="addStep" data-m="${mi}" type="button">+ Adaugă un pas</button>
+  </div>`;
+}
+
+/* ============ evenimente ============ */
+$("form").addEventListener("input", e => {
+  const t = e.target, p = D[cur];
+  if (t.dataset.f) { p[t.dataset.f] = t.dataset.t === "alege" ? t.value : CONV[t.dataset.t].din(t.value); }
+  else if (t.dataset.c === "eticheta") { p.eticheta = t.value.trim(); p.id = p.eticheta; renderList(); }
+  else if (t.dataset.c === "enunt") p.enunt = t.value;
+  else if (t.dataset.c === "optiuni" || t.dataset.c === "raspuns") { if (t.value.trim()) p[t.dataset.c] = t.value; else delete p[t.dataset.c]; }
+  else if (t.dataset.aj !== undefined) {
+    p.ajustari = p.ajustari || {};
+    if (t.value.trim()) p.ajustari[t.dataset.aj] = t.value; else delete p.ajustari[t.dataset.aj];
+    if (!Object.keys(p.ajustari).length) delete p.ajustari;
+  } else if (t.dataset.mf === "nume") p.metode[+t.dataset.m].nume = t.value;
+  else if (t.dataset.sf) {
+    const s = p.metode[+t.dataset.m].pasi[+t.dataset.s];
+    if (t.dataset.sf === "text") s.text = t.value; else if (t.dataset.sf === "viz") s.viz = textToViz(t.value);
+  }
+  persist(); schedulePreview();
+});
+$("form").addEventListener("change", e => {
+  const t = e.target, p = D[cur];
+  if (t.dataset.c === "tip") {
+    if (t.value === (p.tip || "grupe")) return;
+    if (!confirm("Schimbarea tipului înlocuiește datele specifice ale problemei (enunțul se păstrează). Continuați?")) { t.value = p.tip || "grupe"; return; }
+    const T = TIPURI[t.value], keep = { id: p.id, eticheta: p.eticheta, enunt: p.enunt, optiuni: p.optiuni, raspuns: p.raspuns };
+    Object.keys(keep).forEach(k => keep[k] === undefined && delete keep[k]);
+    D[cur] = { ...keep, tip: T.id, ...T.nou(), program: T.program.slice() };
+    persist(); renderAll(); return;
+  }
+  if (t.dataset.prog) {
+    const codes = Object.keys(PROG).filter(c => c === t.dataset.prog ? t.checked : (p.program || []).some(s => codeOf(s) === c));
+    p.program = codes; persist(); renderPreview();
+  } else if (t.dataset.sf === "aplica") {
+    const s = p.metode[+t.dataset.m].pasi[+t.dataset.s];
+    if (t.checked) s.aplica = true; else delete s.aplica;
+    persist(); renderPreview();
+  } else if (t.dataset.f) { renderForm(); renderPreview(); }
+});
+$("form").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const p = D[cur], a = b.dataset.act;
+  if (a === "bold") {
+    const ta = $("f-en"), s = ta.selectionStart, en = ta.selectionEnd; if (s === en) return;
+    ta.value = ta.value.slice(0, s) + "<b>" + ta.value.slice(s, en) + "</b>" + ta.value.slice(en);
+    p.enunt = ta.value; persist(); renderPreview(); return;
+  }
+  p.metode = p.metode || [];
+  if (a === "addMethod") p.metode.push({ nume: `Metoda ${p.metode.length + 2}: `, pasi: [{ text: "", viz: [] }] });
+  else if (a === "delMethod") { if (!confirm("Ștergeți această metodă?")) return; p.metode.splice(+b.dataset.m, 1); }
+  else if (a === "addStep") p.metode[+b.dataset.m].pasi.push({ text: "", viz: [] });
+  else if (a === "delStep") p.metode[+b.dataset.m].pasi.splice(+b.dataset.s, 1);
+  if (!p.metode.length) delete p.metode;
+  persist(); renderForm(); renderPreview();
+});
+
+/* ============ previzualizare ============ */
+const schedulePreview = () => { clearTimeout(prevT); prevT = setTimeout(renderPreview, 200); };
+function renderPreview() {
+  const p = D[cur], T = TIP(p), err = validate(p), box = $("preview");
+  let html = `<h2>Previzualizare – problema ${esc(p.eticheta)}</h2>
+    ${T ? `<span class="tag">${esc(T.nume)}</span>` : ""}
+    <div class="stmt">${p.enunt || ""}${p.optiuni ? `<div class="opt">${esc(p.optiuni)}</div>` : ""}</div>`;
+  if (err.length) html += err.map(m => `<div class="msg bad">${esc(m)}</div>`).join("");
+  else html += `<div class="msg ok">Problema este corectă.</div><h3>Tabla pentru copii</h3><div id="prevBoard"></div><div class="help" id="prevMsg"></div>`;
+  let metode = [];
+  if (!err.length) { try { metode = metodeFor(p); } catch (e) { html += `<div class="msg bad">${esc(e.message)}</div>`; } }
+  metode.forEach(m => {
+    html += `<h3>${esc(m.nume)}</h3>`;
+    m.pasi.forEach((s, si) => {
+      html += `<div class="pstep"><div class="n">Pasul ${si + 1}${s.aplica ? '<span class="badge">arată soluția</span>' : ""}</div><div class="stage">${renderViz(s.viz || [])}</div><p class="cap">${esc(s.text)}</p></div>`;
+    });
+  });
+  box.innerHTML = html;
+  if (!err.length) {
+    const b = document.createElement("div"); $("prevBoard").appendChild(b);
+    try { T.tabla(p, b, { mesaj: h => { $("prevMsg").innerHTML = h || ""; } }); } catch (e) { b.innerHTML = `<div class="msg bad">${esc(e.message)}</div>`; }
+  }
+}
+function renderAll() { renderList(); renderForm(); renderPreview(); }
+
+/* ============ export / import ============ */
+const exportCode = () => `/* probleme.js – generat din administrare */\nconst PROBLEME = ${JSON.stringify(D, null, 2)};\n`;
+$("bExport").onclick = () => {
+  const bad = D.filter(p => validate(p).length).map(p => p.eticheta);
+  $("exportText").value = exportCode();
+  $("expMsg").textContent = bad.length ? `Atenție: problemele ${bad.join(", ")} au erori și nu vor funcționa corect.` : "";
+  $("dlgExport").showModal();
+};
+$("bCloseExp").onclick = () => $("dlgExport").close();
+$("bCopy").onclick = async () => {
+  try { await navigator.clipboard.writeText($("exportText").value); $("expMsg").textContent = "Cod copiat ✓"; }
+  catch (e) { $("exportText").select(); $("expMsg").textContent = "Selectat. Apăsați Ctrl+C (sau Copiază din meniul tabletei)."; }
+};
+$("bDownload").onclick = () => {
+  try {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([$("exportText").value], { type: "text/javascript" }));
+    a.download = "probleme.js"; document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) { $("expMsg").textContent = "Descărcarea nu e disponibilă aici. Folosiți „Copiază codul”."; }
+};
+$("bImport").onclick = () => { $("impMsg").textContent = ""; $("dlgImport").showModal(); };
+$("bCloseImp").onclick = () => $("dlgImport").close();
+$("fileIn").onchange = async e => { const f = e.target.files[0]; if (f) $("importText").value = await f.text(); };
+const parseProblemCode = txt => { const t = txt.trim(); return t.startsWith("[") ? JSON.parse(t) : new Function(t + "\nreturn PROBLEME;")(); };
+$("bDoImport").onclick = () => {
+  try {
+    const arr = parseProblemCode($("importText").value);
+    if (!Array.isArray(arr) || !arr.length) throw new Error("Lista este goală.");
+    if (!confirm("Lista curentă va fi înlocuită. Continuați?")) return;
+    D = arr; cur = 0; persist(); renderAll(); $("dlgImport").close();
+  } catch (e) { $("impMsg").textContent = "Cod invalid: " + e.message; }
+};
+$("bResetOrig").onclick = () => {
+  if (!confirm("Se pierd modificările nesalvate în fișier. Continuați?")) return;
+  D = clone(PROBLEME); cur = 0; persist(); renderAll(); $("dlgImport").close();
+};
+
+/* ============ pornire ============ */
+D = loadDraft(); renderAll();
+</script>
+</body>
+</html>
