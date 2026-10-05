@@ -76,7 +76,13 @@ const SC = (() => {
   }
   function rotate(e) {
     if (e.t === "seg") { const cx = horiz(e) ? e.x + e.len / 2 : e.x + G / 2, cy = horiz(e) ? e.y + G / 2 : e.y + e.len / 2; e.o = horiz(e) ? "v" : "h"; if (horiz(e)) { e.x = cx - e.len / 2; e.y = cy - G / 2; } else { e.x = cx - G / 2; e.y = cy - e.len / 2; } }
-    else if (e.t === "acol") { const cx = horiz(e) ? e.x + e.len / 2 : e.x + B / 2, cy = horiz(e) ? e.y + B / 2 : e.y + e.len / 2; e.o = horiz(e) ? "v" : "h"; if (horiz(e)) { e.x = cx - e.len / 2; e.y = cy - B / 2; } else { e.x = cx - B / 2; e.y = cy - e.len / 2; } }
+    else if (e.t === "acol") {
+      /* 4 direcții, câte 90° în sensul acelor de ceasornic: vârful sus → dreapta → jos → stânga */
+      const bb = ext(e), cx = (bb.x1 + bb.x2) / 2, cy = (bb.y1 + bb.y2) / 2;
+      const dir = horiz(e) ? (e.f ? 2 : 0) : (e.f ? 1 : 3), nd = (dir + 1) % 4;
+      e.o = nd % 2 === 0 ? "h" : "v"; e.f = nd === 1 || nd === 2;
+      if (horiz(e)) { e.x = cx - e.len / 2; e.y = cy - B / 2; } else { e.x = cx - B / 2; e.y = cy - e.len / 2; }
+    }
     else if (e.t === "lin") { const cx = horiz(e) ? e.x + e.len / 2 : e.x, cy = horiz(e) ? e.y : e.y + e.len / 2; e.o = horiz(e) ? "v" : "h"; if (horiz(e)) { e.x = cx - e.len / 2; e.y = cy; } else { e.x = cx; e.y = cy - e.len / 2; } }
     const b = ext(e); if (b.x1 < 0) e.x -= b.x1; if (b.y1 < 0) e.y -= b.y1; if (b.x2 > W) e.x -= b.x2 - W; if (b.y2 > H) e.y -= b.y2 - H;
   }

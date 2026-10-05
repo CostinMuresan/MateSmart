@@ -271,9 +271,9 @@ function barHtml(e) {
   if (e.t === "seg" || e.t === "lin" || e.t === "acol") h += `<span class="vs"></span>` + b("len", "−", 'data-d="-1"', "Mai scurt") + `<span class="lenv">${fmtLen(e)}</span>` + b("len", "+", 'data-d="1"', "Mai lung");
   if (e.t === "txt") h += `<span class="vs"></span>` + b("size", "A−", 'data-d="-8"', "Mai mic") + b("size", "A+", 'data-d="8"', "Mai mare");
   h += `<span class="vs"></span>`;
-  if (e.t === "seg" || e.t === "lin" || e.t === "acol") h += b("rot", IC.rot, "", "Rotește");
+  if (e.t === "seg" || e.t === "lin" || e.t === "acol") h += b("rot", IC.rot, "", e.t === "acol" ? "Rotește acolada 90°" : "Rotește");
   if (e.t === "lin") h += b("dash", e.dash ? IC.solid : IC.dash, "", e.dash ? "Fă-o continuă" : "Fă-o punctată");
-  if (e.t === "acol") h += b("flip", "⇅", "", "Răstoarnă");
+  if (e.t === "acol") h += b("flip", e.o === "v" ? "⇄" : "⇅", "", "Întoarce în partea opusă");
   h += b("dup", IC.dup, "", "Duplică") + b("del", IC.del, "", "Șterge", "danger");
   return h;
 }
