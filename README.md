@@ -39,6 +39,7 @@ Problemele nepublicate încă se pot vedea pe tablă la `probleme.html#ciorna` (
 ## Whiteboard: folosire
 - Tabla rămâne liberă: **atingeți un element** ca să apară mini-bara de lângă el (culoare, etichetă, lungime, rotire, duplicare, ștergere). Tragerea unui element nu deschide nimic.
 - **Zoom:** ciupire cu două degete, butoanele − / + din bara de sus, rotița mouse-ului. Butonul cu procent (ex. 100%) readuce tabla întreagă. Cu un deget pe fundal gol, tabla se deplasează.
+- **Bara de unelte se poate muta sus sau jos** cu butonul ▼ / ▲ de lângă meniul „⋯” (utilă pe table mari). Poziția se reține.
 - Meniul „⋯” conține grila, lungimea liberă, ascunderea paletei de elemente, salvarea, ștergerea totală și tema.
 
 ## Whiteboard: scena

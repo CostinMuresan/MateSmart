@@ -27,6 +27,11 @@ body{
   user-select:none;-webkit-user-select:none;overflow:hidden;
 }
 body.nopal{grid-template-columns:0 minmax(0,1fr)}
+/* bara de unelte în partea de jos (potrivit pentru table mari) */
+body.bar-bottom{grid-template-rows:minmax(0,1fr) auto}
+.bar-bottom .topbar{grid-row:2;border-bottom:0;border-top:3px solid var(--ink)}
+.bar-bottom .stage{grid-row:1}
+.bar-bottom .menu{top:auto;bottom:calc(100% + 8px)}
 body.nopal .palette{display:none}
 
 /* paleta de elemente */
@@ -103,6 +108,9 @@ button:focus-visible,input:focus-visible{outline:4px solid #ffd447;outline-offse
   .palette{grid-column:1;grid-row:1;flex-direction:row;border-right:0;border-bottom:3px solid var(--ink);overflow-x:auto}
   .topbar{grid-column:1;grid-row:2}
   .stage{grid-column:1;grid-row:3}
+  body.bar-bottom{grid-template-rows:auto minmax(0,1fr) auto}
+  .bar-bottom .topbar{grid-row:3}
+  .bar-bottom .stage{grid-row:2}
   body.nopal .palette{display:none}
   .palette h2{display:none}
   .pb{min-width:90px}
@@ -141,6 +149,7 @@ button:focus-visible,input:focus-visible{outline:4px solid #ffd447;outline-offse
     <button class="btn zl" id="zLab" title="Potrivește pe ecran">100%</button>
     <button class="btn sq" id="bZp" aria-label="Mărește">+</button>
   </div>
+  <button class="btn sq" id="bPos" aria-label="Mută bara de unelte">▼</button>
   <div class="menuwrap">
     <button class="btn sq" id="bMenu" aria-label="Meniu" aria-expanded="false">⋯</button>
     <div class="menu" id="menu" hidden>
@@ -191,7 +200,7 @@ const PENS = ["ink", "#e4202d", "#1f4fd8", "#1f9d55"];
 const HINT_EL = "Atinge un element ca să apară uneltele. Trage cu două degete ca să mărești.";
 
 /* ---------- preferințe ---------- */
-let pref = { recent: [], free: false, grid: true, pal: true };
+let pref = { recent: [], free: false, grid: true, pal: true, bar: "top" };
 try { const q = JSON.parse(localStorage.getItem(PKEY)); if (q && typeof q === "object") pref = { ...pref, ...q }; } catch (e) {}
 const savePref = () => { pref.free = free; pref.grid = grid; try { localStorage.setItem(PKEY, JSON.stringify(pref)); } catch (e) {} };
 function addRecent(c) {
@@ -501,6 +510,17 @@ function renderPens() {
 $("penCols").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (b) { pen = b.dataset.c; if (mode !== "pen") setMode("pen"); renderPens(); } });
 $("penCustom").addEventListener("input", e => { pen = e.target.value; if (mode !== "pen") setMode("pen"); renderPens(); });
 
+/* poziția barei de unelte: sus sau jos */
+function applyBar() {
+  const jos = pref.bar === "bottom";
+  document.body.classList.toggle("bar-bottom", jos);
+  $("bPos").textContent = jos ? "▲" : "▼";
+  $("bPos").title = jos ? "Mută bara sus" : "Mută bara jos";
+  $("bPos").setAttribute("aria-label", $("bPos").title);
+  renderUI();
+}
+$("bPos").onclick = () => { pref.bar = pref.bar === "bottom" ? "top" : "bottom"; savePref(); applyBar(); showHint(pref.bar === "bottom" ? "Bara de unelte este jos." : "Bara de unelte este sus."); };
+
 /* meniul ⋯ */
 function closeMenu() { $("menu").hidden = true; $("bMenu").setAttribute("aria-expanded", "false"); }
 $("bMenu").onclick = e => { e.stopPropagation(); const o = $("menu").hidden; $("menu").hidden = !o; $("bMenu").setAttribute("aria-expanded", String(o)); };
@@ -560,7 +580,7 @@ if (!S) S = SC.nou();
 grid = pref.grid !== false; free = !!pref.free;
 $("cGrid").checked = grid; $("cFree").checked = free; $("cPal").checked = pref.pal !== false;
 document.body.classList.toggle("nopal", pref.pal === false);
-renderPens(); commit(); renderAll(); showHint(HINT_EL);
+renderPens(); commit(); renderAll(); applyBar(); showHint(HINT_EL);
 </script>
 </body>
 </html>
