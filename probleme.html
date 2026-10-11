@@ -136,6 +136,7 @@ canvas#ink.on{pointer-events:auto;cursor:crosshair}
 <script src="motor.js"></script>
 <script src="tipuri.js"></script>
 <script src="probleme.js"></script>
+<script src="asistent.js"></script>
 <script>
 /* ============ lista de probleme (sau ciorna din administrare) ============ */
 let LISTA = PROBLEME, CIORNA = false;
@@ -144,7 +145,7 @@ if (location.hash === "#ciorna") {
 }
 const $ = id => document.getElementById(id);
 let P, T, TAB = null;
-const api = { mesaj: h => { $("help").innerHTML = h || ""; } };
+const api = { mesaj: h => { $("help").innerHTML = h || ""; if (h && /result ok/.test(h) && typeof Asistent !== "undefined") Asistent.final(); } };
 
 function load(i) {
   closeEx();
@@ -159,6 +160,7 @@ function load(i) {
   if (err.length) { box.innerHTML = `<div class="err">Această problemă are erori: ${err.map(esc).join(" ")}</div>`; $("bExplain").disabled = $("bCheck").disabled = true; return; }
   $("bExplain").disabled = $("bCheck").disabled = false;
   TAB = T.tabla(P, box, api);
+  Asistent.incarca(P, $("tabla"));
 }
 $("bReset").onclick = () => load(LISTA.indexOf(P));
 $("bCheck").onclick = () => { if (TAB) TAB.verifica(); };

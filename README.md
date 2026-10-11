@@ -20,6 +20,7 @@ Pagini noi se adaugă în lista `PAGINI` din `index.html`.
 | `tipuri.js` | Tipurile de probleme (metodele de rezolvare) |
 | `motor.js` | Partea comună pentru probleme: desenele pașilor, calcule |
 | `scena.js` | Formatul de scenă și elementele grafice ale whiteboardului |
+| `asistent.js` | Cerculețul asistent și panoul învățătorului (texte pe metode, 3 trepte de ajutor) |
 | `tema.js` | Comutatorul de temă, comun tuturor paginilor |
 | `.nojekyll` | Fișier gol, cerut de GitHub Pages |
 
@@ -35,6 +36,12 @@ Toate fișierele trebuie să stea în același folder.
 ## Actualizarea problemelor
 Administrare, Exportă probleme.js, Copiază; în GitHub deschideți `probleme.js`, Edit (creionul), lipiți codul, Commit changes.
 Problemele nepublicate încă se pot vedea pe tablă la `probleme.html#ciorna` (același browser).
+
+## Asistentul din pagina de probleme
+- Cerculețul 💡 din colț oferă ajutor în 3 trepte: întrebare, indiciu despre instrument, primul pas. Vocea citește textul doar când cineva atinge cerculețul.
+- Panoul **Învățător** (butonul mic din stânga-jos) arată metoda recomandată de programă, alte metode acceptate, competențele și setările asistentului: Oprit / La cerere / Automat (implicit, cerculețul pulsează după 90 s fără atingeri, maximum 3 ori pe problemă), pauză 5 minute, oprire pe o problemă. Un punct roșu semnalează „elevul pare blocat”.
+- Observațiile („a ales singur / a primit un indiciu / a avut nevoie de ajutor”) sunt doar numărători pe problemă, fără nume, salvate în browser.
+- Textele se află în `asistent.js` (obiectul METODE) și provin din documentul de texte.
 
 ## Whiteboard: folosire
 - Tabla rămâne liberă: **atingeți un element** ca să apară mini-bara de lângă el (culoare, etichetă, lungime, rotire, duplicare, ștergere). Tragerea unui element nu deschide nimic.
