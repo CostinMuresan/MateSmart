@@ -205,6 +205,7 @@ const Asistent = (() => {
 .as-s{font:700 16px/1 var(--font,sans-serif);min-height:42px;padding:0 12px;border-radius:10px;border:2px solid var(--ink,#1d2b4f);background:var(--panel,#fff);color:var(--ink,#1d2b4f);cursor:pointer}
 .as-s[aria-pressed="true"]{background:#ffd447;color:#1d2b4f}
 .as-info{color:var(--muted,#52638a);font-size:16px}
+.as-circle,.as-teacher,.as-bubble,.as-panel{zoom:var(--ui,1)}
 `;
   function init() {
     if (root || typeof document === "undefined") return;

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Matematică pe tablă – clasa a II-a</title>
 <script src="tema.js"></script>
+<script src="uisize.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -79,6 +80,17 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none}
 .pen-tools{display:none;gap:8px}
 .pen-tools.on{display:flex}
 .sep{width:3px;background:var(--line);border-radius:2px;margin:4px 2px}
+/* mărimea uneltelor */
+.bar{zoom:var(--ui,1)}
+#bSize{zoom:var(--ui-menu,1)}
+#app{padding-bottom:calc(120px * var(--ui,1))}
+.uipop{position:fixed;z-index:60;width:290px;background:var(--panel);border:3px solid var(--ink);border-radius:14px;padding:8px;box-shadow:0 10px 28px rgba(0,0,0,.3)}
+.uipop[hidden]{display:none}
+.uisz{padding:4px 6px 6px}
+.uirow{display:flex;justify-content:space-between;font:700 15px var(--font);margin-bottom:4px}
+.uisz input[type=range]{width:100%;height:34px;accent-color:#ffd447;cursor:pointer}
+.uibtns{display:flex;gap:4px}
+.uibtns .btn{flex:1;min-width:0;border:2px solid var(--ink)!important;justify-content:center!important;min-height:38px!important;padding:0 4px!important;font-size:14px!important;width:auto!important}
 button:focus-visible{outline:4px solid #ffd447;outline-offset:2px}
 canvas#ink{position:fixed;inset:0;width:100%;height:100%;z-index:20;pointer-events:none;touch-action:none}
 canvas#ink.on{pointer-events:auto;cursor:crosshair}
@@ -131,7 +143,9 @@ canvas#ink.on{pointer-events:auto;cursor:crosshair}
   </span>
   <span class="sep"></span>
   <button class="btn" id="bTema"></button>
+  <button class="btn" id="bSize" aria-label="Mărimea uneltelor" title="Mărimea uneltelor">Aa</button>
 </div>
+<div class="uipop" id="uiPop" hidden><div class="uisz"><div class="uirow"><b>Mărimea uneltelor</b><b id="uiVal">100%</b></div><input type="range" id="uiRange" min="10" max="150" step="5" value="100" aria-label="Mărimea uneltelor"><div class="uibtns"><button class="btn" data-ui="50">50%</button><button class="btn" data-ui="75">75%</button><button class="btn" data-ui="100">100%</button><button class="btn" data-ui="125">125%</button></div></div></div>
 
 <script src="motor.js"></script>
 <script src="tipuri.js"></script>
@@ -279,6 +293,10 @@ function stroke(e, dot) {
   if (dot) { ctx.beginPath(); ctx.arc(e.clientX, e.clientY, w / 2, 0, 7); ctx.fill(); }
   last = [e.clientX, e.clientY];
 }
+
+$("bSize").onclick = e => { e.stopPropagation(); const o = $("uiPop").hidden; $("uiPop").hidden = !o; if (o) UISIZE.place($("uiPop"), $("bSize")); };
+document.addEventListener("pointerdown", e => { if (!e.target.closest("#uiPop, #bSize")) $("uiPop").hidden = true; });
+addEventListener("uisize", () => { if (!$("uiPop").hidden) UISIZE.place($("uiPop"), $("bSize")); });
 
 /* ============ pornire ============ */
 LISTA.forEach((p, i) => {

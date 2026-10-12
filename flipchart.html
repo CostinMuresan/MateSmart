@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flipchart</title>
+<script src="tema.js"></script>
+<script src="uisize.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  --paper:#f6fbff; --grid:#cfe3f4; --ink:#1d2b4f; --muted:#52638a;
+  --panel:#ffffff; --line:#b9cde4; --bad:#d64545; --rule:#bcd3ee; --margin:#e8707a;
+  --font:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--paper:#16213a;--grid:#243556;--ink:#eef3ff;--muted:#a9b8d8;--panel:#1e2c4d;--line:#3b4f7a;--rule:#2d4170}
+}
+:root[data-theme="dark"]{--paper:#16213a;--grid:#243556;--ink:#eef3ff;--muted:#a9b8d8;--panel:#1e2c4d;--line:#3b4f7a;--rule:#2d4170}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  font-family:var(--font);color:var(--ink);background:var(--panel);
+  display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
+  grid-template-areas:"strip bar" "strip stage";
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+  user-select:none;-webkit-user-select:none;overflow:hidden;
+}
+body.bar-bottom{grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"strip stage" "strip bar"}
+body.strip-bottom{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"bar" "stage" "strip"}
+body.strip-bottom.bar-bottom{grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"stage" "strip" "bar"}
+body.strip-off{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"bar" "stage"}
+body.strip-off.bar-bottom{grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"stage" "bar"}
+body.strip-off .strip{display:none}
+body.prez .bar,body.prez .strip{display:none}
+.strip{grid-area:strip;background:var(--panel);border-right:3px solid var(--ink);overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px;width:164px}
+body.strip-bottom .strip{flex-direction:row;width:auto;border-right:0;border-top:3px solid var(--ink);padding:6px 8px;height:112px}
+.th{position:relative;flex:none;border:3px solid var(--line);border-radius:8px;padding:0;background:var(--paper);cursor:pointer;overflow:hidden;width:140px;aspect-ratio:16/9;color:var(--ink)}
+body.strip-bottom .th{width:150px}
+.th.on{border-color:#ffd447;box-shadow:0 0 0 3px var(--ink)}
+.th svg{display:block;width:100%;height:100%}
+.th .n{position:absolute;left:4px;bottom:2px;font:800 14px var(--font);background:var(--panel);border:2px solid var(--ink);border-radius:8px;padding:0 6px;line-height:1.3}
+.th.add{display:grid;place-items:center;border-style:dashed;font:800 34px var(--font);color:var(--muted)}
+
+.bar{grid-area:bar;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 10px;background:var(--panel);border-bottom:3px solid var(--ink)}
+body.bar-bottom .bar{border-bottom:0;border-top:3px solid var(--ink)}
+.btn{font:700 16px/1 var(--font);min-height:44px;padding:0 11px;border-radius:11px;border:3px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;gap:6px}
+.btn[aria-pressed="true"]{background:#ffd447;color:#1d2b4f}
+.btn[disabled]{opacity:.4;cursor:default}
+.btn[hidden]{display:none}
+.btn.sq{width:44px;padding:0;font-size:22px}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.btn.main{background:var(--ink);color:var(--paper)}
+.btn.main[aria-pressed="true"]{background:#ffd447;color:#1d2b4f}
+.sep{width:3px;align-self:stretch;background:var(--line);border-radius:2px;margin:2px 1px}
+.grp{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.sw{width:34px;height:34px;border-radius:50%;border:3px solid var(--ink);padding:0;cursor:pointer;flex:none}
+.sw.on{outline:4px solid #ffd447;outline-offset:1px}
+.swc{position:relative;display:inline-block;width:34px;height:34px;border-radius:50%;border:3px solid var(--ink);background:conic-gradient(#e4202d,#f2d024,#1f9d55,#2bb5c9,#1f4fd8,#c2418b,#e4202d);cursor:pointer;overflow:hidden;flex:none}
+.swc input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);opacity:0;cursor:pointer;border:0;padding:0}
+.sz{width:44px;height:44px;padding:0}
+.sz i{display:block;border-radius:50%;background:currentColor}
+.zl{min-width:62px;font-size:15px}
+.menuwrap{position:relative;margin-left:auto}
+.menu{position:fixed;overflow:auto;z-index:40;width:300px;max-height:72vh;overflow:auto;background:var(--panel);border:3px solid var(--ink);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+.menu[hidden]{display:none}
+.uisz{padding:4px 6px 6px}
+.uirow{display:flex;justify-content:space-between;font:700 15px var(--font);margin-bottom:4px}
+.uisz input[type=range]{width:100%;height:34px;accent-color:#ffd447;cursor:pointer}
+.uibtns{display:flex;gap:4px}
+.uibtns .btn{flex:1;min-width:0;border:2px solid var(--ink)!important;justify-content:center!important;min-height:38px!important;padding:0 4px!important;font-size:14px!important;width:auto!important}
+
+.menu .btn{border:0;width:100%;justify-content:flex-start;font-size:17px}
+.menu .btn:hover{background:var(--paper)}
+.menu .seg{display:flex;gap:4px;margin:2px 0}
+.menu .seg .btn{border:2px solid var(--ink);justify-content:center;min-height:40px;padding:0 6px;font-size:15px}
+.menu h4{margin:6px 6px 2px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.menu hr{border:0;border-top:2px solid var(--line);margin:4px 0;width:100%}
+.menu label.chk{display:flex;gap:10px;align-items:center;font:700 16px var(--font);padding:6px 10px;cursor:pointer}
+.menu label.chk input{width:22px;height:22px}
+
+.stage{grid-area:stage;position:relative;min-width:0;min-height:0;background:var(--line);overflow:hidden;padding:14px}
+body.prez .stage{padding:0}
+.sheet{position:relative;width:100%;height:100%}
+svg#cv{width:100%;height:100%;display:block;touch-action:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.3))}
+svg#cv .ink,svg#cv .el{pointer-events:none}
+svg#cv.t-sel .ink{pointer-events:stroke}
+svg#cv.t-sel .el{pointer-events:auto}
+svg#cv.t-erase{cursor:cell}
+svg#cv.t-pen,svg#cv.t-hl,svg#cv.t-seg,svg#cv.t-lin,svg#cv.t-arr,svg#cv.t-acol,svg#cv.t-rect,svg#cv.t-elip{cursor:crosshair}
+svg#cv.t-txt{cursor:text}
+svg#cv.t-pan{cursor:grab}
+.sheet.next{animation:slideN .28s ease-out}
+.sheet.prev{animation:slideP .28s ease-out}
+@keyframes slideN{from{transform:translateX(5%);opacity:.2}to{transform:none;opacity:1}}
+@keyframes slideP{from{transform:translateX(-5%);opacity:.2}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet.next,.sheet.prev{animation:none}.corner.pulse{animation:none}}
+.corner{position:absolute;bottom:14px;width:96px;height:96px;border:0;background:transparent;padding:0;cursor:pointer;z-index:5;filter:drop-shadow(-3px -3px 5px rgba(0,0,0,.28));transition:transform .15s}
+body.prez .corner{bottom:0}
+.corner.br{right:14px}.corner.bl{left:14px}
+body.prez .corner.br{right:0}body.prez .corner.bl{left:0}
+.corner .fold{position:absolute;inset:0;background:linear-gradient(315deg,#e6edf7,#b4c4dc)}
+.corner.br .fold{clip-path:polygon(100% 0,100% 100%,0 100%);border-bottom-right-radius:6px}
+.corner.bl .fold{clip-path:polygon(0 0,0 100%,100% 100%);border-bottom-left-radius:6px;background:linear-gradient(45deg,#e6edf7,#b4c4dc)}
+.corner .lbl{position:absolute;bottom:8px;font:800 34px/1 var(--font);color:#1d2b4f}
+.corner.br .lbl{right:14px}.corner.bl .lbl{left:14px}
+.corner:active{transform:scale(.94)}
+.corner[disabled]{opacity:.25;cursor:default;filter:none}
+.corner.pulse{animation:cp 1.5s ease-in-out infinite}
+@keyframes cp{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.indic{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);font:800 18px var(--font);background:var(--panel);color:var(--ink);border:3px solid var(--ink);border-radius:14px;padding:4px 14px;z-index:4;pointer-events:none}
+.hint{position:absolute;left:50%;top:22px;transform:translateX(-50%);font:600 16px var(--font);background:var(--panel);color:var(--muted);border:2px solid var(--line);padding:3px 12px;border-radius:10px;pointer-events:none;transition:opacity .6s;z-index:4;max-width:90%;text-align:center}
+.hint.off{opacity:0}
+#prezExit{display:none;position:absolute;right:14px;top:12px;z-index:30;opacity:.6}
+body.prez #prezExit{display:inline-flex}
+#prezExit:hover,#prezExit:focus-visible{opacity:1}
+
+/* mini-bara de lângă obiect */
+.minibar{position:absolute;z-index:20;display:flex;gap:3px;align-items:center;padding:4px;background:var(--panel);border:3px solid var(--ink);border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.25);max-width:calc(100% - 8px);flex-wrap:wrap}
+.minibar[hidden],.pop[hidden]{display:none}
+.mb{width:42px;height:42px;border-radius:10px;border:2px solid transparent;background:transparent;color:var(--ink);font:800 19px/1 var(--font);cursor:pointer;padding:0;display:inline-grid;place-items:center}
+.mb:hover,.mb:active{background:var(--paper);border-color:var(--line)}
+.mb[aria-pressed="true"]{background:#ffd447;color:#1d2b4f}
+.mb.danger{color:var(--bad)}
+.mb svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mb .dot{display:block;width:24px;height:24px;border-radius:50%;border:3px solid var(--ink)}
+.lenv{font:700 15px var(--font);min-width:34px;text-align:center;color:var(--muted)}
+.vs{width:2px;align-self:stretch;background:var(--line);margin:3px 2px}
+.pop{position:absolute;z-index:21;background:var(--panel);border:3px solid var(--ink);border-radius:14px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.colors{display:grid;grid-template-columns:repeat(7,34px);gap:5px;justify-content:center}
+.colors .sw{width:34px;height:34px;border-width:2px}
+.colors .swc{width:34px;height:34px;border-width:2px}
+.colors .sep2{grid-column:1/-1;height:0}
+.pop input[type=text]{font:700 22px var(--font);width:100%;height:44px;padding:0 10px;border-radius:10px;border:3px solid var(--ink);background:var(--paper);color:var(--ink);text-align:center;margin-bottom:6px}
+.kp{display:grid;grid-template-columns:repeat(5,44px);gap:4px}
+.k{height:44px;border-radius:10px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);font:800 20px var(--font);cursor:pointer;padding:0}
+.k.wide{grid-column:span 5;font-size:17px;background:var(--ink);color:var(--paper)}
+dialog{width:min(820px,94vw);border:3px solid var(--ink);border-radius:16px;background:var(--panel);color:var(--ink);padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog textarea{width:100%;min-height:300px;font:13px ui-monospace,Menlo,Consolas,monospace;border:2px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);padding:8px}
+/* mărimea uneltelor */
+.bar{zoom:var(--ui,1)}
+.corner,.indic,#prezExit{zoom:var(--ui,1)}
+.minibar>*,.pop>*{zoom:var(--ui,1)}
+#bMenu{zoom:var(--ui-menu,1)}
+button:focus-visible,input:focus-visible{outline:4px solid #ffd447;outline-offset:2px}
+</style>
+</head>
+<body class="strip-left bar-top">
+<aside class="strip" id="strip" aria-label="Foile"><div id="thumbs" style="display:contents"></div></aside>
+
+<div class="bar" role="toolbar" id="bar">
+  <a class="btn sq" href="index.html" title="Meniu principal">🏠</a>
+  <div class="grp">
+    <button class="btn tl main" data-t="sel" aria-pressed="false" title="Selectează, mută, redimensionează">Alege</button>
+    <button class="btn tl" data-t="pen" aria-pressed="true">Creion</button>
+    <button class="btn tl" data-t="hl" aria-pressed="false">Marker</button>
+    <button class="btn tl" data-t="erase" aria-pressed="false">Radieră</button>
+  </div>
+  <span class="sep"></span>
+  <div class="grp" aria-label="Obiecte">
+    <button class="btn tl" data-t="seg" aria-pressed="false" title="Trage ca să desenezi un segment">Segment</button>
+    <button class="btn tl" data-t="lin" aria-pressed="false">Linie</button>
+    <button class="btn tl" data-t="arr" aria-pressed="false">Săgeată</button>
+    <button class="btn tl" data-t="acol" aria-pressed="false">Acoladă</button>
+    <button class="btn tl" data-t="txt" aria-pressed="false">Text</button>
+    <button class="btn tl" data-t="rect" aria-pressed="false">Dreptunghi</button>
+    <button class="btn tl" data-t="elip" aria-pressed="false">Elipsă</button>
+  </div>
+  <span class="sep"></span>
+  <div class="grp" id="cols" role="radiogroup" aria-label="Culoare"></div>
+  <label class="swc" title="Altă culoare"><input type="color" id="colCustom" value="#7a5cc7" aria-label="Altă culoare"></label>
+  <div class="grp" id="sizes" aria-label="Grosime"></div>
+  <span class="sep"></span>
+  <div class="grp">
+    <button class="btn sq" id="bUndo" aria-label="Înapoi">↶</button>
+    <button class="btn sq" id="bRedo" aria-label="Înainte">↷</button>
+  </div>
+  <div class="grp" aria-label="Zoom">
+    <button class="btn sq" id="bZm" aria-label="Micșorează">−</button>
+    <button class="btn zl" id="zLab" title="Potrivește pe ecran">100%</button>
+    <button class="btn sq" id="bZp" aria-label="Mărește">+</button>
+    <button class="btn tl" data-t="pan" id="tPan" aria-pressed="false" hidden title="Deplasează foaia">Mână</button>
+  </div>
+  <button class="btn sq" id="bPrez" aria-label="Prezentare" title="Prezentare: ascunde barele">⛶</button>
+  <button class="btn sq" id="bPos" aria-label="Mută bara">▼</button>
+  <div class="menuwrap">
+    <button class="btn sq" id="bMenu" aria-label="Meniu" aria-expanded="false">⋯</button>
+    
+  </div>
+</div>
+
+<main class="stage" id="stage">
+  <div class="sheet" id="sheet"><svg id="cv" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Foaie de flipchart"></svg></div>
+  <button class="corner bl" id="cPrev" aria-label="Foaia anterioară"><span class="fold"></span><span class="lbl">‹</span></button>
+  <button class="corner br" id="cNext" aria-label="Foaia următoare sau foaie nouă"><span class="fold"></span><span class="lbl">+</span></button>
+  <div class="indic" id="indic" aria-live="polite"></div>
+  <div class="hint" id="hint"></div>
+  <button class="btn" id="prezExit" aria-label="Ieși din prezentare">✕ Ieși din prezentare</button>
+  <div class="minibar" id="mbar" hidden></div>
+  <div class="pop" id="pop" hidden></div>
+</main>
+<div class="menu" id="menu" hidden><div class="uisz"><div class="uirow"><b>Mărimea uneltelor</b><b id="uiVal">100%</b></div><input type="range" id="uiRange" min="10" max="150" step="5" value="100" aria-label="Mărimea uneltelor"><div class="uibtns"><button class="btn" data-ui="50">50%</button><button class="btn" data-ui="75">75%</button><button class="btn" data-ui="100">100%</button><button class="btn" data-ui="125">125%</button></div></div><hr>
+      <h4>Foaia curentă</h4>
+      <div class="seg" id="bgSeg">
+        <button class="btn" data-bg="alb">Albă</button>
+        <button class="btn" data-bg="patratele">Pătrățele</button>
+        <button class="btn" data-bg="liniat">Liniată</button>
+      </div>
+      <button class="btn" id="mNew">➕ Foaie nouă după aceasta</button>
+      <button class="btn" id="mDup">⧉ Duplică foaia</button>
+      <div class="seg"><button class="btn" id="mLeft">‹ Mută înapoi</button><button class="btn" id="mRight">Mută înainte ›</button></div>
+      <button class="btn" id="mClear">🧽 Golește foaia</button>
+      <button class="btn danger" id="mDel">🗑 Șterge foaia</button>
+      <hr>
+      <h4>Radieră</h4>
+      <div class="seg"><button class="btn" id="eoPart">Pe porțiuni</button><button class="btn" id="eoStroke">Trăsătură întreagă</button></div>
+      <label class="chk"><input type="checkbox" id="cEraseObj"> Radiera șterge și obiectele</label>
+      <hr>
+      <h4>Aspect</h4>
+      <button class="btn" id="mStrip">▦ Banda de foi: stânga</button>
+      <button class="btn" id="bTema"></button>
+      <hr>
+      <button class="btn" id="mSave">💾 Salvează / Încarcă</button>
+    </div>
+
+<dialog id="dlg">
+  <h2 style="margin-top:0">Flipchart (JSON)</h2>
+  <p style="margin:0 0 8px;color:var(--muted)">Foile se păstrează cât timp rămâne deschisă fereastra browserului. Pentru o păstrare mai lungă, copiați codul sau descărcați fișierul. Lipiți un cod ca să încărcați foile.</p>
+  <textarea id="dlgText" spellcheck="false"></textarea>
+  <div class="grp" style="margin-top:10px;flex-wrap:wrap">
+    <button class="btn" id="bCopy">Copiază</button>
+    <button class="btn" id="bDown">Descarcă fișierul</button>
+    <button class="btn" id="bLoad">Încarcă din text</button>
+    <button class="btn" id="bClose">Închide</button>
+  </div>
+  <p id="dlgMsg" style="color:var(--muted)"></p>
+</dialog>
+
+<script src="scena.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const svg = $("cv");
+const W = 1600, H = 900, U = SC.U, G = SC.G, B = SC.B;
+const SKEY = "matematica.flip.sesiune", PKEY = "matematica.flip.pref";
+const COLORS = ["ink", "#e4202d", "#1f4fd8", "#1f9d55", "#f28c28", "#7a5cc7", "#c2418b", "#8b5a2b"];
+const PEN_W = [4, 8, 14], HL_W = [22, 34, 50], ER_R = [24, 48, 90];
+const DRAW = ["seg", "lin", "arr", "acol", "rect", "elip"];
+const HINTS = {
+  sel: "Atinge un obiect ca să-l selectezi. Trage pe foaie ca să încercuiești mai multe.",
+  pen: "Scrie cu degetul sau cu stiloul.", hl: "Marker transparent.", erase: "Șterge scrisul atingându-l.",
+  seg: "Trage ca să desenezi un segment. Rămâi pe unealtă ca să desenezi altele; apasă Alege ca să le muți.",
+  lin: "Trage ca să desenezi o linie.", arr: "Trage ca să desenezi o săgeată.", acol: "Trage ca să desenezi o acoladă.",
+  txt: "Atinge foaia ca să scrii un text.", rect: "Trage în diagonală ca să desenezi un dreptunghi.", elip: "Trage în diagonală ca să desenezi o elipsă.", pan: "Trage ca să deplasezi foaia mărită."
+};
+let F, cur = 0, tool = "pen", color = "ink", size = 1, hist = {}, sel = [], ui = { bar: false, pop: null }, popKey = "";
+let drag = null, view = { x: 0, y: 0, w: W, h: H }, lastPen = 0;
+const ptrs = new Map(); let gest = null, ignore = false;
+let pref = { bar: "top", strip: "left", erase: "part", eraseObj: false };
+try { const q = JSON.parse(localStorage.getItem(PKEY)); if (q && typeof q === "object") pref = { ...pref, ...q }; } catch (e) {}
+const savePref = () => { try { localStorage.setItem(PKEY, JSON.stringify(pref)); } catch (e) {} };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const r1 = v => Math.round(v * 10) / 10;
+
+/* ---------- date ---------- */
+const foaieNoua = (fundal = "alb") => ({ id: SC.newId(), fundal, elemente: [] });
+const flipNou = () => ({ format: "flipchart", v: 1, id: "fc-" + Date.now().toString(36), foi: [foaieNoua()], cur: 0 });
+const pg = () => F.foi[cur], els = () => pg().elemente, byId = id => els().find(e => e.id === id);
+const selEls = () => sel.map(byId).filter(Boolean);
+const kz = () => view.w / W;
+const gridOn = () => pg().fundal === "patratele";
+const tol = () => 18 * kz();
+function H_(f) { return hist[f.id] || (hist[f.id] = { s: [JSON.stringify(f.elemente)], i: 0 }); }
+function save() {
+  F.cur = cur;
+  try { sessionStorage.setItem(SKEY, JSON.stringify(F)); } catch (e) { showHint("Memoria sesiunii e plină. Exportați foile (Meniu ⋯ → Salvează)."); }
+}
+function commit() {
+  const f = pg(), h = H_(f), j = JSON.stringify(f.elemente);
+  if (h.s[h.i] === j) { save(); return; }
+  h.s = h.s.slice(0, h.i + 1); h.s.push(j); if (h.s.length > 60) h.s.shift(); h.i = h.s.length - 1;
+  save(); renderStrip(); updUndo(); updCorner();
+}
+function updUndo() { const h = H_(pg()); $("bUndo").disabled = h.i <= 0; $("bRedo").disabled = h.i >= h.s.length - 1; }
+function undoRedo(d) {
+  const f = pg(), h = H_(f), n = h.i + d; if (n < 0 || n >= h.s.length) return;
+  h.i = n; f.elemente = JSON.parse(h.s[n]); sel = sel.filter(id => byId(id)); if (!sel.length) { ui.bar = false; ui.pop = null; }
+  save(); renderAll();
+}
+$("bUndo").onclick = () => undoRedo(-1); $("bRedo").onclick = () => undoRedo(1);
+
+/* ---------- desenare ---------- */
+function bg(fundal, k) {
+  const base = `<rect width="${W}" height="${H}" style="fill:var(--paper)"/>`;
+  if (fundal === "patratele") return `<defs><pattern id="p${k}" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" style="fill:none;stroke:var(--grid)" stroke-width="2"/></pattern></defs>${base}<rect width="${W}" height="${H}" style="fill:url(#p${k})"/>`;
+  if (fundal === "liniat") return `<defs><pattern id="p${k}" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M0 59H60" style="fill:none;stroke:var(--rule)" stroke-width="2"/></pattern></defs>${base}<rect width="${W}" height="${H}" style="fill:url(#p${k})"/><path d="M130 0V${H}" style="fill:none;stroke:var(--margin)" stroke-width="3" opacity=".7"/>`;
+  return base;
+}
+function unionBox(list) {
+  const bs = list.map(SC.ext);
+  return { x1: Math.min(...bs.map(b => b.x1)), y1: Math.min(...bs.map(b => b.y1)), x2: Math.max(...bs.map(b => b.x2)), y2: Math.max(...bs.map(b => b.y2)) };
+}
+function handlesOf(e) {
+  if (e.t === "seg" || e.t === "acol") { const b = SC.ext(e), hz = SC.horiz(e), cx = (b.x1 + b.x2) / 2, cy = (b.y1 + b.y2) / 2; return hz ? [["a", b.x1, cy], ["b", b.x2, cy]] : [["a", cx, b.y1], ["b", cx, b.y2]]; }
+  if (e.t === "ln") return [["a", e.x, e.y], ["b", e.x + e.dx, e.y + e.dy]];
+  if (e.t === "rect" || e.t === "elip") return [["a", e.x, e.y], ["b", e.x + e.w, e.y + e.h]];
+  return [];
+}
+function overlayMarkup() {
+  const k = kz(); let s = "";
+  const list = tool === "sel" ? selEls() : [];
+  if (list.length) {
+    const b = unionBox(list), pad = 8 * k;
+    s += `<rect x="${b.x1 - pad}" y="${b.y1 - pad}" width="${b.x2 - b.x1 + 2 * pad}" height="${b.y2 - b.y1 + 2 * pad}" rx="${10 * k}" style="fill:none;stroke:#ffd447;pointer-events:none" stroke-width="${5 * k}" stroke-dasharray="${14 * k} ${8 * k}"/>`;
+    if (list.length === 1) handlesOf(list[0]).forEach(([n, x, y]) => { s += `<circle data-h="${n}" cx="${x}" cy="${y}" r="${15 * k}" style="fill:#ffd447;stroke:#1d2b4f" stroke-width="${4 * k}"/><circle data-h="${n}" cx="${x}" cy="${y}" r="${34 * k}" style="fill:transparent"/>`; });
+  }
+  if (drag && drag.k === "marquee" && drag.moved) { const x = Math.min(drag.x0, drag.x1), y = Math.min(drag.y0, drag.y1); s += `<rect x="${x}" y="${y}" width="${Math.abs(drag.x1 - drag.x0)}" height="${Math.abs(drag.y1 - drag.y0)}" style="fill:rgba(255,212,71,.15);stroke:#e0a800;pointer-events:none" stroke-width="${3 * k}" stroke-dasharray="${10 * k} ${6 * k}"/>`; }
+  return s;
+}
+function renderPage() {
+  const f = pg();
+  svg.setAttribute("class", "t-" + tool);
+  svg.innerHTML = `${bg(f.fundal, "m")}${f.elemente.map(SC.desen).join("")}<g id="live"></g>${overlayMarkup()}<circle id="ecur" r="${ER_R[size]}" cx="-999" cy="-999" style="fill:rgba(255,212,71,.18);stroke:var(--ink);pointer-events:none" stroke-width="3" stroke-dasharray="10 8"/>`;
+}
+const liveSet = obj => { const g = $("live"); if (g) g.innerHTML = obj ? SC.desen(obj) : ""; };
+const pageFull = f => f.elemente.some(e => { const b = SC.ext(e); return b.x2 > 1280 && b.y2 > 740 && b.x2 - b.x1 < 1500; });
+function updCorner() {
+  const last = cur === F.foi.length - 1;
+  $("cNext").querySelector(".lbl").textContent = last ? "+" : "›";
+  $("cNext").setAttribute("aria-label", last ? "Adaugă o foaie nouă" : "Foaia următoare");
+  $("cNext").classList.toggle("pulse", last && pageFull(pg()));
+  $("cPrev").disabled = cur === 0;
+  $("indic").textContent = `Foaia ${cur + 1} / ${F.foi.length}`;
+}
+function renderStrip() {
+  const mini = (f, i) => `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${bg(f.fundal, "t" + i)}${f.elemente.map(SC.desen).join("")}</svg>`;
+  $("thumbs").innerHTML = F.foi.map((f, i) => `<button class="th${i === cur ? " on" : ""}" data-i="${i}" aria-label="Foaia ${i + 1}"${i === cur ? ' aria-current="true"' : ""}>${mini(f, i)}<span class="n">${i + 1}</span></button>`).join("")
+    + `<button class="th add" data-add="1" aria-label="Foaie nouă">+</button>`;
+  const on = $("thumbs").querySelector(".th.on"); if (on && on.scrollIntoView) on.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+function renderAll() { renderPage(); renderStrip(); updCorner(); updUndo(); renderUI(); }
+$("thumbs").addEventListener("click", e => { const b = e.target.closest(".th"); if (!b) return; if (b.dataset.add) adauga(F.foi.length - 1); else go(+b.dataset.i); });
+
+/* ---------- zoom și deplasare ---------- */
+function setView(x, y, w) {
+  w = clamp(w, W / 4, W); const h = w * H / W;
+  view = { x: clamp(x, 0, W - w), y: clamp(y, 0, H - h), w, h };
+  svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
+  $("zLab").textContent = Math.round(W / view.w * 100) + "%";
+  $("tPan").hidden = view.w >= W; if (view.w >= W && tool === "pan") setTool("pen");
+  renderPage(); renderUI();
+}
+function zoomAt(f, cx, cy) { const nw = clamp(view.w / f, W / 4, W), r = nw / view.w; setView(cx - (cx - view.x) * r, cy - (cy - view.y) * r, nw); }
+const viewCenter = () => ({ x: view.x + view.w / 2, y: view.y + view.h / 2 });
+$("bZp").onclick = () => { const c = viewCenter(); zoomAt(1.25, c.x, c.y); };
+$("bZm").onclick = () => { const c = viewCenter(); zoomAt(1 / 1.25, c.x, c.y); };
+$("zLab").onclick = () => setView(0, 0, W);
+svg.addEventListener("wheel", e => { e.preventDefault(); const p = pt(e); zoomAt(Math.exp(-e.deltaY * 0.0022), p.x, p.y); }, { passive: false });
+
+/* ---------- foi: navigare, adăugare ---------- */
+function anim(dir) { const s = $("sheet"); s.classList.remove("next", "prev"); void s.offsetWidth; s.classList.add(dir > 0 ? "next" : "prev"); }
+function setViewQuiet() { view = { x: 0, y: 0, w: W, h: H }; svg.setAttribute("viewBox", `0 0 ${W} ${H}`); $("zLab").textContent = "100%"; $("tPan").hidden = true; if (tool === "pan") tool = "pen"; }
+function resetSel() { sel = []; ui.bar = false; ui.pop = null; setViewQuiet(); }
+function go(i) {
+  i = clamp(i, 0, F.foi.length - 1); if (i === cur) return;
+  const dir = i > cur ? 1 : -1; cur = i; resetSel(); save(); anim(dir); renderAll(); syncTools();
+}
+function adauga(dupa) {
+  const f = foaieNoua(pg().fundal); F.foi.splice(dupa + 1, 0, f); cur = dupa + 1; resetSel(); save(); anim(1); renderAll(); syncTools(); showHint("Foaie nouă adăugată.");
+}
+$("cNext").onclick = () => { cur === F.foi.length - 1 ? adauga(cur) : go(cur + 1); };
+$("cPrev").onclick = () => go(cur - 1);
+
+/* ---------- geometrie: puncte, lipire ---------- */
+function pt(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse()); return { x: p.x, y: p.y }; }
+const inPage = p => p.x >= 0 && p.x <= W && p.y >= 0 && p.y <= H;
+const clampP = p => ({ x: clamp(p.x, 0, W), y: clamp(p.y, 0, H) });
+const ptAt = (x, y) => pt({ clientX: x, clientY: y });
+function endpoints(e) {
+  if (e.t === "seg" || e.t === "acol") return handlesOf(e).map(h => [h[1], h[2]]);
+  if (e.t === "ln") return [[e.x, e.y], [e.x + e.dx, e.y + e.dy]];
+  if (e.t === "rect" || e.t === "elip") return [[e.x, e.y], [e.x + e.w, e.y], [e.x, e.y + e.h], [e.x + e.w, e.y + e.h]];
+  return [];
+}
+function snapPt(x, y, skip) {
+  let best = null;
+  for (const o of els()) { if (o.id === skip) continue; for (const [px, py] of endpoints(o)) { const d = Math.hypot(px - x, py - y); if (d <= tol() * 1.5 && (!best || d < best.d)) best = { d, x: px, y: py }; } }
+  return best ? { x: best.x, y: best.y } : { x, y };
+}
+function angSnap(x0, y0, x1, y1) {
+  const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy); if (L < 20) return { x: x1, y: y1 };
+  const a = Math.atan2(dy, dx), step = Math.PI / 4, n = Math.round(a / step), diff = Math.abs(a - n * step);
+  if (diff < 5 * Math.PI / 180) return { x: x0 + Math.cos(n * step) * L, y: y0 + Math.sin(n * step) * L };
+  return { x: x1, y: y1 };
+}
+
+/* ---------- crearea obiectelor prin tragere ---------- */
+function makeObj(t, x0, y0, x1, y1, final) {
+  const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy), id = SC.newId(), gs = gridOn();
+  if (t === "seg" || t === "acol") {
+    const isSeg = t === "seg", th = isSeg ? G : B; let o = "h", len, x, y;
+    if (d < 10) { len = (isSeg ? 4 : 6) * U; x = x0 - len / 2; y = y0 - th / 2; }
+    else {
+      o = Math.abs(dx) >= Math.abs(dy) ? "h" : "v"; len = Math.max(U / 2, Math.abs(o === "h" ? dx : dy)); if (gs) len = Math.max(U, Math.round(len / U) * U);
+      if (o === "h") { x = Math.min(x0, x1); y = y0 - th / 2; } else { x = x0 - th / 2; y = Math.min(y0, y1); }
+    }
+    const e = isSeg ? { id, t: "seg", x, y, len, o, c: color === "ink" ? "#3f6fd1" : color, l: "" } : { id, t: "acol", x, y, len, o, l: "?", f: false, c: color };
+    const r = SC.snapMove(e, e.x, e.y, els(), gs, tol()); e.x = Math.round(r.x); e.y = Math.round(r.y);
+    return e;
+  }
+  if (t === "lin" || t === "arr") {
+    if (d < 8) return final ? null : { id, t: "ln", x: x0, y: y0, dx: 0, dy: 0, c: color, w: PEN_W[size], arrow: t === "arr", dash: false };
+    let p = angSnap(x0, y0, x1, y1); p = snapPt(p.x, p.y);
+    return { id, t: "ln", x: x0, y: y0, dx: p.x - x0, dy: p.y - y0, c: color, w: PEN_W[size], arrow: t === "arr", dash: false };
+  }
+  if (t === "rect" || t === "elip") {
+    const w = Math.abs(dx), h = Math.abs(dy); if (final && (w < 12 || h < 12)) return null;
+    return { id, t, x: Math.min(x0, x1), y: Math.min(y0, y1), w, h, c: color, f: false, w2: PEN_W[size] };
+  }
+  return null;
+}
+
+/* ---------- radieră ---------- */
+function cutStroke(pts, cx, cy, r) {
+  const r2 = r * r, inside = (x, y) => (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r2, out = []; let c = [];
+  const flush = () => { if (c.length >= 2) out.push(c); c = []; };
+  for (let i = 0; i < pts.length; i++) {
+    const x = pts[i][0], y = pts[i][1];
+    if (i === 0) { if (!inside(x, y)) c.push([x, y]); continue; }
+    const px = pts[i - 1][0], py = pts[i - 1][1], dx = x - px, dy = y - py, fx = px - cx, fy = py - cy;
+    const a = dx * dx + dy * dy, b = 2 * (fx * dx + fy * dy), k = fx * fx + fy * fy - r2, pin = k <= 0, qin = inside(x, y);
+    let t1 = -1, t2 = -1; if (a > 0) { const dd = b * b - 4 * a * k; if (dd >= 0) { const s = Math.sqrt(dd); t1 = (-b - s) / (2 * a); t2 = (-b + s) / (2 * a); } }
+    const at = t => [r1(px + t * dx), r1(py + t * dy)], cl = t => Math.max(0, Math.min(1, t));
+    if (!pin && !qin) { if (t1 > 0 && t2 < 1 && t1 < t2) { c.push(at(t1)); flush(); c.push(at(t2)); c.push([x, y]); } else c.push([x, y]); }
+    else if (!pin && qin) { c.push(at(cl(t1))); flush(); }
+    else if (pin && !qin) { c = [at(cl(t2)), [x, y]]; }
+  }
+  flush(); return out;
+}
+function segD2(px, py, qx, qy, cx, cy) {
+  const dx = qx - px, dy = qy - py, l = dx * dx + dy * dy; let t = l ? ((cx - px) * dx + (cy - py) * dy) / l : 0; t = Math.max(0, Math.min(1, t));
+  const x = px + t * dx - cx, y = py + t * dy - cy; return x * x + y * y;
+}
+function eraseAt(x, y) {
+  const r = ER_R[size], f = pg(); let changed = false; const next = [];
+  for (const el of f.elemente) {
+    if (el.t !== "ink") {
+      if (pref.eraseObj) { const b = SC.ext(el), dx = Math.max(b.x1 - x, 0, x - b.x2), dy = Math.max(b.y1 - y, 0, y - b.y2); if (Math.hypot(dx, dy) <= r * .6) { changed = true; continue; } }
+      next.push(el); continue;
+    }
+    const pts = el.pts; let touched = false;
+    for (let i = 0; i < pts.length && !touched; i++) { const q = pts[Math.min(i + 1, pts.length - 1)]; if (segD2(pts[i][0], pts[i][1], q[0], q[1], x, y) <= r * r) touched = true; }
+    if (!touched) { next.push(el); continue; }
+    changed = true; if (pref.erase === "stroke") continue;
+    cutStroke(pts, x, y, r).forEach((p, k) => next.push(k === 0 ? { ...el, pts: p } : { ...el, id: SC.newId(), pts: p }));
+  }
+  if (changed) f.elemente = next;
+  return changed;
+}
+const moveCur = p => { const c = $("ecur"); if (c) { c.setAttribute("cx", p.x); c.setAttribute("cy", p.y); } };
+
+/* ---------- gesturi cu două degete (zoom) ---------- */
+function startGesture() {
+  if (drag) {
+    if (drag.k === "ink") { /* trăsătura nu a fost încă adăugată */ }
+    else if ((drag.k === "move" || drag.k === "resize") && drag.moved) { const h = H_(pg()); pg().elemente = JSON.parse(h.s[h.i]); }
+  }
+  drag = null; liveSet(null); ui.bar = false; ui.pop = null;
+  const [a, b] = [...ptrs.values()], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  gest = { d0: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), v0: { ...view }, c0: ptAt(mx, my) };
+  renderAll();
+}
+function doGesture() {
+  const [a, b] = [...ptrs.values()], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, d = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+  const nw = clamp(gest.v0.w / (d / gest.d0), W / 4, W);
+  view = { x: gest.v0.x, y: gest.v0.y, w: nw, h: nw * H / W }; svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
+  const p = ptAt(mx, my); setView(view.x + gest.c0.x - p.x, view.y + gest.c0.y - p.y, nw);
+}
+
+/* ---------- interacțiune cu foaia ---------- */
+svg.addEventListener("pointerdown", e => {
+  if (e.pointerType === "pen") lastPen = Date.now(); else if (e.pointerType === "touch" && Date.now() - lastPen < 2500) return;   // palma nu scrie când se folosește stiloul
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  closeMenu();
+  if (ptrs.size === 2) { startGesture(); return; }
+  if (ptrs.size > 2 || ignore || drag) return;
+  const p = pt(e); ui.pop = null;
+  if (tool !== "sel" && tool !== "pan" && !inPage(p)) return;
+  svg.setPointerCapture(e.pointerId);
+  const base = { id: e.pointerId };
+  if (tool === "pen" || tool === "hl") {
+    const w = tool === "hl" ? HL_W[size] : PEN_W[size], o = tool === "hl" ? .35 : 1;
+    const st = { id: SC.newId(), t: "ink", pts: [[r1(p.x), r1(p.y)]], c: color, w, o }; drag = { ...base, k: "ink", st };
+    liveSet(st); return;
+  }
+  if (tool === "erase") { drag = { ...base, k: "erase", last: p, changed: false }; drag.changed = eraseAt(p.x, p.y); moveCur(p); if (drag.changed) { renderPage(); moveCur(p); } return; }
+  if (tool === "pan") { drag = { ...base, k: "pan", sx: e.clientX, sy: e.clientY, v0: { ...view } }; return; }
+  if (tool === "txt") {
+    const t = { id: SC.newId(), t: "txt", x: r1(p.x), y: r1(p.y), s: 56, c: color, l: "" };
+    pg().elemente.push(t); ptrs.delete(e.pointerId); setTool("sel"); sel = [t.id]; ui.bar = true; ui.pop = "lbl"; renderAll(); return;
+  }
+  if (DRAW.includes(tool)) {
+    const s0 = (tool === "lin" || tool === "arr") ? snapPt(p.x, p.y) : p;
+    drag = { ...base, k: "draw", t: tool, x0: s0.x, y0: s0.y, x1: s0.x, y1: s0.y, moved: false }; liveSet(makeObj(tool, s0.x, s0.y, s0.x, s0.y, false)); return;
+  }
+  /* Alege */
+  const h = e.target.closest("[data-h]");
+  if (h && sel.length === 1) { drag = { ...base, k: "resize", end: h.dataset.h, id0: sel[0], moved: false }; ui.bar = false; renderUI(); return; }
+  const g = e.target.closest("[data-id]");
+  if (g) {
+    const id = g.dataset.id, was = sel.length === 1 && sel[0] === id && ui.bar;
+    if (!sel.includes(id)) sel = [id];
+    const ne = byId(id);
+    if (sel.length === 1 && (ne.t === "seg" || ne.t === "acol")) { const end = SC.nearEnd(ne, p, 40 * kz()); if (end) { drag = { ...base, k: "resize", end, id0: id, moved: false }; ui.bar = false; renderPage(); renderUI(); return; } }
+    drag = { ...base, k: "move", ids: [...sel], start: p, orig: Object.fromEntries(sel.map(i => [i, JSON.parse(JSON.stringify(byId(i)))])), moved: false, was, x0: e.clientX, y0: e.clientY };
+    ui.bar = false; renderPage(); renderUI(); return;
+  }
+  drag = { ...base, k: "marquee", x0: p.x, y0: p.y, x1: p.x, y1: p.y, moved: false, sx: e.clientX, sy: e.clientY };
+});
+svg.addEventListener("pointermove", e => {
+  if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (gest && ptrs.size >= 2) { doGesture(); return; }
+  if (ignore) return;
+  if (!drag || e.pointerId !== drag.id) { if (tool === "erase" && !drag) moveCur(pt(e)); return; }
+  const p = clampP(pt(e));
+  switch (drag.k) {
+    case "ink": { const l = drag.st.pts[drag.st.pts.length - 1]; if (Math.hypot(p.x - l[0], p.y - l[1]) >= 1.5 * kz()) { drag.st.pts.push([r1(p.x), r1(p.y)]); liveSet(drag.st); } break; }
+    case "erase": {
+      const r = ER_R[size], d = Math.hypot(p.x - drag.last.x, p.y - drag.last.y), n = Math.max(1, Math.ceil(d / (r * .6))); let ch = false;
+      for (let i = 1; i <= n; i++) { const t = i / n; if (eraseAt(drag.last.x + (p.x - drag.last.x) * t, drag.last.y + (p.y - drag.last.y) * t)) ch = true; }
+      drag.last = p; if (ch) { drag.changed = true; renderPage(); } moveCur(p); break;
+    }
+    case "pan": { const s = svg.getScreenCTM().a; setView(drag.v0.x - (e.clientX - drag.sx) / s, drag.v0.y - (e.clientY - drag.sy) / s, view.w); break; }
+    case "draw": { drag.x1 = p.x; drag.y1 = p.y; drag.moved = true; liveSet(makeObj(drag.t, drag.x0, drag.y0, p.x, p.y, false)); break; }
+    case "marquee": { if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 6) break; drag.moved = true; drag.x1 = p.x; drag.y1 = p.y; renderPage(); break; }
+    case "move": {
+      if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 5) break; drag.moved = true;
+      let dx = p.x - drag.start.x, dy = p.y - drag.start.y;
+      if (drag.ids.length === 1) {
+        const o = drag.orig[drag.ids[0]], cur_ = byId(drag.ids[0]);
+        if (o.t !== "ink") { const r = SC.snapMove(cur_, o.x + dx, o.y + dy, els(), gridOn(), tol()); dx = r.x - o.x; dy = r.y - o.y; }
+      }
+      drag.ids.forEach(id => { const i = els().findIndex(x => x.id === id); if (i >= 0) els()[i] = SC.shift(JSON.parse(JSON.stringify(drag.orig[id])), dx, dy); });
+      renderPage(); break;
+    }
+    case "resize": {
+      drag.moved = true; const el = byId(drag.id0); if (!el) break;
+      if (el.t === "seg" || el.t === "acol") { const raw = SC.horiz(el) ? p.x : p.y; const r = SC.snapEnd(el, raw, els(), gridOn(), tol()); SC.resize(el, drag.end, Math.round(r.pos)); }
+      else if (el.t === "ln") {
+        if (drag.end === "b") { const a = angSnap(el.x, el.y, p.x, p.y), s = snapPt(a.x, a.y, el.id); el.dx = r1(s.x - el.x); el.dy = r1(s.y - el.y); }
+        else { const ex = el.x + el.dx, ey = el.y + el.dy, a = angSnap(ex, ey, p.x, p.y), s = snapPt(a.x, a.y, el.id); el.x = r1(s.x); el.y = r1(s.y); el.dx = r1(ex - s.x); el.dy = r1(ey - s.y); }
+      } else if (el.t === "rect" || el.t === "elip") {
+        const x2 = el.x + el.w, y2 = el.y + el.h;
+        if (drag.end === "b") { el.w = Math.max(12, r1(p.x - el.x)); el.h = Math.max(12, r1(p.y - el.y)); }
+        else { const nx = Math.min(p.x, x2 - 12), ny = Math.min(p.y, y2 - 12); el.x = r1(nx); el.y = r1(ny); el.w = r1(x2 - nx); el.h = r1(y2 - ny); }
+      }
+      renderPage(); break;
+    }
+  }
+});
+function endPtr(e) {
+  ptrs.delete(e.pointerId);
+  if (gest) { if (ptrs.size < 2) { gest = null; ignore = ptrs.size > 0; renderAll(); } return; }
+  if (ignore) { if (ptrs.size === 0) ignore = false; return; }
+  if (!drag || e.pointerId !== drag.id) return;
+  const d = drag; drag = null;
+  switch (d.k) {
+    case "ink": { if (d.st.pts.length < 2) d.st.pts.push([d.st.pts[0][0] + .1, d.st.pts[0][1]]); pg().elemente.push(d.st); renderPage(); commit(); return; }
+    case "erase": { const c = $("ecur"); if (c) { c.setAttribute("cx", -999); c.setAttribute("cy", -999); } if (d.changed) { commit(); renderAll(); } return; }
+    case "draw": { const o = makeObj(d.t, d.x0, d.y0, d.x1, d.y1, true); liveSet(null); if (o) { pg().elemente.push(o); commit(); } renderPage(); return; }   // rămâne pe aceeași unealtă
+    case "move": if (d.moved) commit(); else { ui.bar = !d.was; } break;
+    case "resize": if (d.moved) commit(); break;
+    case "marquee": {
+      if (d.moved) {
+        const x1 = Math.min(d.x0, d.x1), x2 = Math.max(d.x0, d.x1), y1 = Math.min(d.y0, d.y1), y2 = Math.max(d.y0, d.y1);
+        sel = els().filter(o => { const b = SC.ext(o); return b.x2 >= x1 && b.x1 <= x2 && b.y2 >= y1 && b.y1 <= y2; }).map(o => o.id); ui.bar = sel.length > 0;
+      } else { sel = []; ui.bar = false; ui.pop = null; }
+      break;
+    }
+    case "pan": return;
+  }
+  renderAll();
+}
+svg.addEventListener("pointerup", endPtr); svg.addEventListener("pointercancel", endPtr);
+
+/* ---------- unelte ---------- */
+function syncTools() {
+  document.querySelectorAll(".tl").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === tool));
+  renderSizes();
+}
+function setTool(t) {
+  tool = t; if (t !== "sel") { sel = []; ui.bar = false; ui.pop = null; }
+  drag = null; syncTools(); renderPage(); renderUI(); showHint(HINTS[t] || "");
+}
+document.querySelectorAll(".tl").forEach(b => b.addEventListener("click", () => setTool(b.dataset.t)));
+function renderCols() {
+  $("cols").innerHTML = COLORS.map(c => `<button class="sw${c === color ? " on" : ""}" data-c="${c}" style="background:${c === "ink" ? "var(--ink)" : c}" aria-label="Culoare ${c === "ink" ? "automată" : c}"></button>`).join("");
+}
+$("cols").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (!b) return; color = b.dataset.c; if (tool === "erase" || tool === "sel" || tool === "pan") setTool("pen"); renderCols(); });
+$("colCustom").addEventListener("input", e => { color = e.target.value; if (tool === "erase" || tool === "sel" || tool === "pan") setTool("pen"); renderCols(); });
+function renderSizes() {
+  const dots = tool === "erase" ? [10, 18, 28] : [5, 10, 17];
+  $("sizes").innerHTML = dots.map((d, i) => `<button class="btn sz" data-s="${i}" aria-pressed="${i === size}" aria-label="Grosime ${i + 1}"><i style="width:${d}px;height:${d}px"></i></button>`).join("");
+}
+$("sizes").addEventListener("click", e => { const b = e.target.closest("[data-s]"); if (!b) return; size = +b.dataset.s; renderSizes(); const c = $("ecur"); if (c) c.setAttribute("r", ER_R[size]); });
+
+/* ---------- mini-bara și ferestrele mici ---------- */
+const IC = {
+  rot: '<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-3-6.2M20 4v5h-5"/></svg>',
+  dup: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></svg>',
+  del: '<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+  front: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="11" height="11" rx="2"/><rect x="10" y="10" width="11" height="11" rx="2" style="fill:currentColor;fill-opacity:.25"/></svg>',
+  back: '<svg viewBox="0 0 24 24"><rect x="10" y="10" width="11" height="11" rx="2"/><rect x="3" y="3" width="11" height="11" rx="2" style="fill:currentColor;fill-opacity:.25"/></svg>'
+};
+const fmtLen = e => String(Math.round(e.len / U * 100) / 100).replace(".", ",");
+function barHtml(list) {
+  const one = list.length === 1 ? list[0] : null, t = one && one.t;
+  const mb = (a, inner, title, extra = "", cls = "") => `<button class="mb ${cls}" data-a="${a}" ${extra} title="${title}" aria-label="${title}">${inner}</button>`;
+  const cur_ = list[0].c === "ink" || (SC.isInk(list[0].c) && list[0].t !== "seg") ? "var(--ink)" : (list[0].c || "#888");
+  let h = mb("col", `<i class="dot" style="background:${cur_}"></i>`, "Culoare");
+  if (t === "seg" || t === "acol") h += mb("lbl", `<span>12</span>`, "Etichetă");
+  if (t === "txt") h += mb("lbl", `<span>Aa</span>`, "Editează textul") + mb("size", "A−", "Mai mic", 'data-d="-8"') + mb("size", "A+", "Mai mare", 'data-d="8"');
+  if (t === "seg" || t === "acol") h += `<span class="vs"></span>` + mb("len", "−", "Mai scurt", 'data-d="-1"') + `<span class="lenv">${fmtLen(one)}</span>` + mb("len", "+", "Mai lung", 'data-d="1"');
+  if (t === "seg" || t === "acol") h += mb("rot", IC.rot, t === "acol" ? "Rotește acolada 90°" : "Rotește");
+  if (t === "acol") h += mb("flip", one.o === "v" ? "⇄" : "⇅", "Întoarce în partea opusă");
+  if (t === "ln") h += mb("arrow", "➤", "Vârf de săgeată", `aria-pressed="${!!one.arrow}"`) + mb("dash", "┄", "Punctată", `aria-pressed="${!!one.dash}"`) + mb("thick", "▬", "Grosime");
+  if (t === "rect" || t === "elip") h += mb("fill", "◼", "Umplere", `aria-pressed="${!!one.f}"`) + mb("thick", "▬", "Grosime");
+  h += `<span class="vs"></span>` + mb("front", IC.front, "Adu în față") + mb("back", IC.back, "Trimite în spate") + mb("dup", IC.dup, "Duplică") + mb("del", IC.del, "Șterge", "", "danger");
+  return h;
+}
+function popHtml(list) {
+  const one = list[0];
+  if (ui.pop === "col") {
+    const on = c => String(one.c || "").toLowerCase() === c.toLowerCase() || (c === "ink" && one.t !== "seg" && SC.isInk(one.c));
+    const sw = (c, n) => `<button class="sw${on(c) ? " on" : ""}" data-a="setcol" data-c="${c}" style="background:${c === "ink" ? "var(--ink)" : c}" aria-label="${n}" title="${n}"></button>`;
+    const curc = /^#[0-9a-f]{6}$/i.test(one.c || "") ? one.c : "#3f6fd1";
+    return `<div class="colors">${SC.CULORI.map(([c, n]) => sw(c, n)).join("")}<label class="swc" title="Orice altă culoare"><input type="color" id="objCustom" value="${curc}" aria-label="Altă culoare"></label></div>`;
+  }
+  if (ui.pop === "lbl") {
+    const txt = one.t === "txt", keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "?", "+", "=", "−", "⌫"].map(k => `<button class="k" data-a="key" data-k="${k}">${k}</button>`).join("");
+    return `<input type="text" id="lbl" maxlength="${txt ? 60 : 10}" value="${SC.esc(one.l)}" placeholder="${txt ? "scrie textul" : "etichetă"}" aria-label="Etichetă" autocomplete="off"><div class="kp">${keys}<button class="k wide" data-a="done">Gata</button></div>`;
+  }
+  return "";
+}
+function toStage(x, y) { const p = new DOMPoint(x, y).matrixTransform(svg.getScreenCTM()), r = $("stage").getBoundingClientRect(); return { x: p.x - r.left, y: p.y - r.top }; }
+function renderUI() {
+  const bar = $("mbar"), pop = $("pop"), list = tool === "sel" ? selEls() : [];
+  if (!list.length || !ui.bar || gest) { bar.hidden = true; pop.hidden = true; popKey = ""; return; }
+  bar.innerHTML = barHtml(list); bar.hidden = false;
+  const st = $("stage"), sw = st.clientWidth, sh = st.clientHeight, bw = bar.offsetWidth, bh = bar.offsetHeight, b = unionBox(list);
+  const a = toStage((b.x1 + b.x2) / 2, b.y1), c = toStage((b.x1 + b.x2) / 2, b.y2);
+  let top = a.y - bh - 16; if (top < 4) top = c.y + 16; top = clamp(top, 4, Math.max(4, sh - bh - 4));
+  const left = clamp(a.x - bw / 2, 4, Math.max(4, sw - bw - 4)); bar.style.left = left + "px"; bar.style.top = top + "px";
+  if (!ui.pop) { pop.hidden = true; popKey = ""; return; }
+  const key = ui.pop + "|" + sel.join(",");
+  if (key !== popKey) { pop.innerHTML = popHtml(list); popKey = key; }
+  pop.hidden = false;
+  const pw = pop.offsetWidth, ph = pop.offsetHeight; let pt2 = top + bh + 8; if (pt2 + ph > sh - 4) pt2 = top - ph - 8;
+  pop.style.left = clamp(left, 4, Math.max(4, sw - pw - 4)) + "px"; pop.style.top = Math.max(4, pt2) + "px";
+  if (ui.pop === "lbl") { const i = $("lbl"); if (i && i.focus && !i._f) { i._f = 1; try { i.focus(); } catch (e) {} } }
+}
+function cloneSel(list) { return list.map(e => { const c = JSON.parse(JSON.stringify(e)); c.id = SC.newId(); SC.shift(c, U, U); return c; }); }
+$("mbar").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-a]"); if (!b) return;
+  const list = selEls(); if (!list.length) return; const a = b.dataset.a, one = list.length === 1 ? list[0] : null;
+  if (a === "col" || a === "lbl") { ui.pop = ui.pop === a ? null : a; renderUI(); return; }
+  if (a === "len" && one) { const d = +b.dataset.d, ax = SC.horiz(one) ? "x" : "y", lim = ax === "x" ? W : H; one.len = clamp(one.len + d * (gridOn() ? U : U / 2), gridOn() ? U : 10, lim - one[ax]); }
+  else if (a === "size" && one) one.s = clamp((one.s || 56) + (+b.dataset.d), 24, 200);
+  else if (a === "rot" && one) SC.rotate(one);
+  else if (a === "flip" && one) one.f = !one.f;
+  else if (a === "arrow" && one) one.arrow = !one.arrow;
+  else if (a === "dash" && one) one.dash = !one.dash;
+  else if (a === "fill" && one) one.f = !one.f;
+  else if (a === "thick" && one) { const k = one.t === "ln" ? "w" : "w2", cur_ = one[k] || 5, i = PEN_W.indexOf(cur_); one[k] = PEN_W[(i + 1) % PEN_W.length]; }
+  else if (a === "front") { const ids = new Set(sel); pg().elemente = [...els().filter(e => !ids.has(e.id)), ...els().filter(e => ids.has(e.id))]; }
+  else if (a === "back") { const ids = new Set(sel); pg().elemente = [...els().filter(e => ids.has(e.id)), ...els().filter(e => !ids.has(e.id))]; }
+  else if (a === "dup") { const cl = cloneSel(list); pg().elemente.push(...cl); sel = cl.map(c => c.id); ui.pop = null; }
+  else if (a === "del") { const ids = new Set(sel); pg().elemente = els().filter(e => !ids.has(e.id)); sel = []; ui.bar = false; ui.pop = null; }
+  commit(); renderAll();
+});
+$("pop").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-a]"); if (!b) return; const list = selEls(); if (!list.length) return; const a = b.dataset.a;
+  if (a === "setcol") { list.forEach(e => { e.c = b.dataset.c; }); ui.pop = null; commit(); renderAll(); }
+  else if (a === "key") {
+    const e = list[0], k = b.dataset.k, mx = e.t === "txt" ? 60 : 10; e.l = k === "⌫" ? (e.l || "").slice(0, -1) : ((e.l || "") + k).slice(0, mx);
+    const inp = $("lbl"); if (inp) inp.value = e.l; commit(); renderPage();
+  } else if (a === "done") finishLabel();
+});
+function finishLabel() {
+  const e = selEls()[0]; ui.pop = null;
+  if (e && e.t === "txt" && !String(e.l || "").trim()) { pg().elemente = els().filter(x => x.id !== e.id); sel = []; ui.bar = false; }
+  commit(); renderAll();
+}
+$("pop").addEventListener("input", ev => {
+  const list = selEls(); if (!list.length) return;
+  if (ev.target.id === "lbl") { list[0].l = ev.target.value; renderPage(); }
+  else if (ev.target.id === "objCustom") { list.forEach(e => { e.c = ev.target.value; }); renderPage(); }
+});
+$("pop").addEventListener("change", ev => {
+  if (ev.target.id === "lbl") commit();
+  else if (ev.target.id === "objCustom") { ui.pop = null; commit(); renderAll(); }
+});
+$("pop").addEventListener("keydown", ev => { if (ev.key === "Enter" && ev.target.id === "lbl") { ev.preventDefault(); finishLabel(); } });
+
+/* ---------- meniu ---------- */
+function closeMenu() { $("menu").hidden = true; $("bMenu").setAttribute("aria-expanded", "false"); }
+$("bMenu").onclick = e => { e.stopPropagation(); const o = $("menu").hidden; $("menu").hidden = !o; if (o) UISIZE.place($("menu"), $("bMenu")); $("bMenu").setAttribute("aria-expanded", String(o)); syncMenu(); };
+document.addEventListener("pointerdown", e => { if (!e.target.closest(".menuwrap, .menu")) closeMenu(); });
+function syncMenu() {
+  document.querySelectorAll("#bgSeg [data-bg]").forEach(b => b.setAttribute("aria-pressed", b.dataset.bg === pg().fundal));
+  $("eoPart").setAttribute("aria-pressed", pref.erase === "part"); $("eoStroke").setAttribute("aria-pressed", pref.erase === "stroke");
+  $("cEraseObj").checked = !!pref.eraseObj;
+  $("mStrip").textContent = "▦ Banda de foi: " + ({ left: "stânga", bottom: "jos", off: "ascunsă" })[pref.strip];
+  $("mLeft").disabled = cur === 0; $("mRight").disabled = cur === F.foi.length - 1;
+}
+$("bgSeg").addEventListener("click", e => { const b = e.target.closest("[data-bg]"); if (!b) return; pg().fundal = b.dataset.bg; save(); renderAll(); syncMenu(); });
+$("mNew").onclick = () => { closeMenu(); adauga(cur); };
+$("mDup").onclick = () => { closeMenu(); const c = JSON.parse(JSON.stringify(pg())); c.id = SC.newId(); c.elemente.forEach(x => { x.id = SC.newId(); }); F.foi.splice(cur + 1, 0, c); cur++; resetSel(); save(); anim(1); renderAll(); showHint("Foaia a fost duplicată."); };
+$("mLeft").onclick = () => { if (cur > 0) { [F.foi[cur - 1], F.foi[cur]] = [F.foi[cur], F.foi[cur - 1]]; cur--; save(); renderAll(); syncMenu(); } };
+$("mRight").onclick = () => { if (cur < F.foi.length - 1) { [F.foi[cur + 1], F.foi[cur]] = [F.foi[cur], F.foi[cur + 1]]; cur++; save(); renderAll(); syncMenu(); } };
+$("mClear").onclick = () => { closeMenu(); if (!els().length || confirm("Goliți această foaie (scris și obiecte)?")) { pg().elemente = []; sel = []; ui.bar = false; commit(); renderAll(); } };
+$("mDel").onclick = () => {
+  closeMenu();
+  if (F.foi.length === 1) { if (confirm("Este singura foaie. O golim?")) { pg().elemente = []; sel = []; commit(); renderAll(); } return; }
+  if (!confirm(`Ștergeți foaia ${cur + 1}?`)) return;
+  delete hist[pg().id]; F.foi.splice(cur, 1); cur = Math.min(cur, F.foi.length - 1); resetSel(); save(); renderAll();
+};
+$("eoPart").onclick = () => { pref.erase = "part"; savePref(); syncMenu(); };
+$("eoStroke").onclick = () => { pref.erase = "stroke"; savePref(); syncMenu(); };
+$("cEraseObj").onchange = e => { pref.eraseObj = e.target.checked; savePref(); };
+function applyLayout() {
+  const b = document.body.classList;
+  b.remove("strip-left", "strip-bottom", "strip-off", "bar-top", "bar-bottom");
+  b.add("strip-" + pref.strip, "bar-" + (pref.bar === "bottom" ? "bottom" : "top"));
+  $("bPos").textContent = pref.bar === "bottom" ? "▲" : "▼"; $("bPos").setAttribute("aria-label", pref.bar === "bottom" ? "Mută bara sus" : "Mută bara jos");
+  renderUI();
+}
+$("bPos").onclick = () => { pref.bar = pref.bar === "bottom" ? "top" : "bottom"; savePref(); applyLayout(); };
+$("mStrip").onclick = () => { pref.strip = ({ left: "bottom", bottom: "off", off: "left" })[pref.strip]; savePref(); applyLayout(); syncMenu(); };
+function prez(on) { document.body.classList.toggle("prez", on); renderUI(); if (on) showHint("Prezentare. Colțurile schimbă foaia; butonul ✕ iese din prezentare."); }
+$("bPrez").onclick = () => prez(true); $("prezExit").onclick = () => prez(false);
+
+/* ---------- salvare / încărcare (JSON) ---------- */
+$("mSave").onclick = () => { closeMenu(); $("dlgText").value = JSON.stringify({ ...F, cur }, null, 1); $("dlgMsg").textContent = ""; $("dlg").showModal(); };
+$("bClose").onclick = () => $("dlg").close();
+$("bCopy").onclick = async () => { try { await navigator.clipboard.writeText($("dlgText").value); $("dlgMsg").textContent = "Copiat ✓"; } catch (e) { $("dlgText").select(); $("dlgMsg").textContent = "Selectat. Folosiți Copiază din meniul dispozitivului."; } };
+$("bDown").onclick = () => { try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([$("dlgText").value], { type: "application/json" })); a.download = "flipchart.json"; document.body.appendChild(a); a.click(); a.remove(); } catch (e) { $("dlgMsg").textContent = "Descărcarea nu e disponibilă aici. Folosiți Copiază."; } };
+$("bLoad").onclick = () => {
+  try {
+    const d = JSON.parse($("dlgText").value);
+    if (!d || d.format !== "flipchart" || !Array.isArray(d.foi) || !d.foi.length) throw new Error("nu este un flipchart");
+    d.foi.forEach(f => { f.id = f.id || SC.newId(); f.fundal = f.fundal || "alb"; f.elemente = f.elemente || []; });
+    F = d; cur = Math.min(d.cur || 0, d.foi.length - 1); hist = {}; resetSel(); save(); renderAll(); $("dlg").close();
+  } catch (e) { $("dlgMsg").textContent = "Cod invalid: " + e.message; }
+};
+
+/* ---------- tastatură ---------- */
+addEventListener("keydown", e => {
+  const typing = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA";
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); $("bUndo").click(); }
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") { e.preventDefault(); $("bRedo").click(); }
+  else if (typing) return;
+  else if (e.key === "Escape") { if (document.body.classList.contains("prez")) prez(false); else setTool("sel"); }
+  else if ((e.key === "Delete" || e.key === "Backspace") && sel.length) { const ids = new Set(sel); pg().elemente = els().filter(x => !ids.has(x.id)); sel = []; ui.bar = false; ui.pop = null; commit(); renderAll(); }
+  else if (e.key === "ArrowRight" || e.key === "PageDown") $("cNext").click();
+  else if (e.key === "ArrowLeft" || e.key === "PageUp") $("cPrev").click();
+  else if (e.key === "+" || e.key === "=") $("bZp").click();
+  else if (e.key === "-" || e.key === "_") $("bZm").click();
+  else if (e.key === "0") $("zLab").click();
+});
+addEventListener("resize", () => renderUI());
+addEventListener("uisize", () => { if (!$("menu").hidden) UISIZE.place($("menu"), $("bMenu")); renderUI(); });
+
+let hintT = null;
+function showHint(t) { const h = $("hint"); if (!t) return; h.textContent = t; h.classList.remove("off"); clearTimeout(hintT); hintT = setTimeout(() => h.classList.add("off"), 5500); }
+
+/* ---------- pornire ---------- */
+try { const d = JSON.parse(sessionStorage.getItem(SKEY)); if (d && d.format === "flipchart" && Array.isArray(d.foi) && d.foi.length) { F = d; cur = Math.min(d.cur || 0, d.foi.length - 1); } } catch (e) {}
+if (!F) { F = flipNou(); cur = 0; }
+applyLayout(); renderCols(); syncTools(); renderAll(); showHint("Atinge colțul din dreapta jos ca să treci la o foaie nouă.");
+</script>
+</body>
+</html>

@@ -34,6 +34,8 @@ const SC = (() => {
     if (e.t === "lin") return horiz(e) ? { x1: e.x, y1: e.y, x2: e.x + e.len, y2: e.y } : { x1: e.x, y1: e.y, x2: e.x, y2: e.y + e.len };
     if (e.t === "acol") return horiz(e) ? { x1: e.x, y1: e.y, x2: e.x + e.len, y2: e.y + B } : { x1: e.x, y1: e.y, x2: e.x + B, y2: e.y + e.len };
     if (e.t === "txt") { const s = e.s || 48, w = Math.max(1, String(e.l || "?").length) * s * .62; return { x1: e.x - w / 2, y1: e.y - s * .7, x2: e.x + w / 2, y2: e.y + s * .45 }; }
+    if (e.t === "ln") return { x1: Math.min(e.x, e.x + e.dx), y1: Math.min(e.y, e.y + e.dy), x2: Math.max(e.x, e.x + e.dx), y2: Math.max(e.y, e.y + e.dy) };
+    if (e.t === "rect" || e.t === "elip") return { x1: e.x, y1: e.y, x2: e.x + e.w, y2: e.y + e.h };
     if (e.t === "ink") { const xs = e.pts.map(p => p[0]), ys = e.pts.map(p => p[1]); return { x1: Math.min(...xs), y1: Math.min(...ys), x2: Math.max(...xs), y2: Math.max(...ys) }; }
     return { x1: 0, y1: 0, x2: 0, y2: 0 };
   }
@@ -86,6 +88,12 @@ const SC = (() => {
     else if (e.t === "lin") { const cx = horiz(e) ? e.x + e.len / 2 : e.x, cy = horiz(e) ? e.y : e.y + e.len / 2; e.o = horiz(e) ? "v" : "h"; if (horiz(e)) { e.x = cx - e.len / 2; e.y = cy; } else { e.x = cx; e.y = cy - e.len / 2; } }
     const b = ext(e); if (b.x1 < 0) e.x -= b.x1; if (b.y1 < 0) e.y -= b.y1; if (b.x2 > W) e.x -= b.x2 - W; if (b.y2 > H) e.y -= b.y2 - H;
   }
+  /* mută un element cu (dx, dy) */
+  function shift(e, dx, dy) {
+    if (e.t === "ink") e.pts = e.pts.map(p => [Math.round((p[0] + dx) * 10) / 10, Math.round((p[1] + dy) * 10) / 10]);
+    else { e.x += dx; e.y += dy; }
+    return e;
+  }
   function elNou(t, n, c) {
     const x = 120 + (n % 6) * U, y = 120 + (n % 8) * 80, id = newId();
     if (t === "seg") return { id, t, x, y, len: 4 * U, o: "h", c, l: "" };
@@ -96,6 +104,13 @@ const SC = (() => {
   }
 
   /* ---------- desenare (SVG) ---------- */
+  /* traseu neted printr-un scris de mână (curbe prin mijlocul segmentelor) */
+  function inkD(pts) {
+    if (pts.length < 3) return "M" + pts.map(p => p[0] + " " + p[1]).join("L");
+    let d = `M${pts[0][0]} ${pts[0][1]}`;
+    for (let i = 1; i < pts.length - 1; i++) d += `Q${pts[i][0]} ${pts[i][1]} ${(pts[i][0] + pts[i + 1][0]) / 2} ${(pts[i][1] + pts[i + 1][1]) / 2}`;
+    const l = pts[pts.length - 1]; return d + `L${l[0]} ${l[1]}`;
+  }
   function brace(e) {
     const col = colA(e.c), f = "font-weight:800;font-family:'Baloo 2',sans-serif;pointer-events:none";
     if (horiz(e)) {
@@ -131,11 +146,25 @@ const SC = (() => {
       return `<g class="el" data-id="${e.id}"><line x1="${b.x1}" y1="${b.y1}" x2="${b.x2}" y2="${b.y2}" style="stroke:${colA(e.c)}" stroke-width="${e.dash ? 7 : 5}" stroke-linecap="round"${e.dash ? ' stroke-dasharray="1 16"' : ""}/><line x1="${b.x1}" y1="${b.y1}" x2="${b.x2}" y2="${b.y2}" style="stroke:transparent" stroke-width="40"/></g>`;
     }
     if (e.t === "acol") return brace(e);
+    if (e.t === "ln") {
+      const x2 = e.x + e.dx, y2 = e.y + e.dy, col = colA(e.c), w = e.w || 5; let head = "";
+      if (e.arrow) {
+        const L = Math.hypot(e.dx, e.dy) || 1, ux = e.dx / L, uy = e.dy / L, k = Math.max(18, w * 3.4), bx = x2 - ux * k, by = y2 - uy * k;
+        head = `<path d="M${x2} ${y2}L${bx - uy * k * .5} ${by + ux * k * .5}L${bx + uy * k * .5} ${by - ux * k * .5}z" style="fill:${col}"/>`;
+      }
+      return `<g class="el" data-id="${e.id}"><line x1="${e.x}" y1="${e.y}" x2="${x2}" y2="${y2}" style="stroke:${col}" stroke-width="${w}" stroke-linecap="round"${e.dash ? ` stroke-dasharray="1 ${Math.round(w * 3.2)}"` : ""}/>${head}<line x1="${e.x}" y1="${e.y}" x2="${x2}" y2="${y2}" style="stroke:transparent" stroke-width="40"/></g>`;
+    }
+    if (e.t === "rect" || e.t === "elip") {
+      const col = colA(e.c), w = e.w2 || 5, st = `style="fill:${col};fill-opacity:${e.f ? .2 : 0};stroke:${col}" stroke-width="${w}"`;
+      return e.t === "rect"
+        ? `<g class="el" data-id="${e.id}"><rect x="${e.x}" y="${e.y}" width="${e.w}" height="${e.h}" rx="10" ${st}/></g>`
+        : `<g class="el" data-id="${e.id}"><ellipse cx="${e.x + e.w / 2}" cy="${e.y + e.h / 2}" rx="${e.w / 2}" ry="${e.h / 2}" ${st}/></g>`;
+    }
     if (e.t === "txt") {
       const b = ext(e);
       return `<g class="el" data-id="${e.id}"><rect x="${b.x1}" y="${b.y1}" width="${b.x2 - b.x1}" height="${b.y2 - b.y1}" style="fill:transparent"/><text x="${e.x}" y="${e.y}" text-anchor="middle" font-size="${e.s || 48}" font-weight="800" style="fill:${colA(e.c)};font-family:'Baloo 2',sans-serif;pointer-events:none">${esc(e.l)}</text></g>`;
     }
-    if (e.t === "ink") return `<path class="ink" data-id="${e.id}" d="M${e.pts.map(p => p[0] + " " + p[1]).join("L")}" style="fill:none;stroke:${colA(e.c)}" stroke-width="${e.w || 6}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if (e.t === "ink") return `<path class="ink" data-id="${e.id}" d="${inkD(e.pts)}" style="fill:none;stroke:${colA(e.c)}" stroke-width="${e.w || 6}"${e.o && e.o < 1 ? ` stroke-opacity="${e.o}"` : ""} stroke-linecap="round" stroke-linejoin="round"/>`;
     return "";
   }
   /* desenează o scenă întreagă, doar pentru afișare (explicații, previzualizări) */
@@ -143,5 +172,5 @@ const SC = (() => {
     const els = scena.elemente, ord = [...els.filter(e => e.t !== "ink"), ...els.filter(e => e.t === "ink")];
     return `<svg viewBox="0 0 ${scena.w || W} ${scena.h || H}" style="width:100%;height:auto;display:block">${o.fundal ? `<rect width="${W}" height="${H}" style="fill:${o.fundal}"/>` : ""}${ord.map(desen).join("")}</svg>`;
   }
-  return { W, H, U, G, B, T, CULORI, esc, txtCol, isInk, horiz, nou, ext, snapMove, snapEnd, resize, nearEnd, rotate, elNou, desen, svg, newId };
+  return { W, H, U, G, B, T, CULORI, esc, txtCol, isInk, inkD, colA, shift, horiz, nou, ext, snapMove, snapEnd, resize, nearEnd, rotate, elNou, desen, svg, newId };
 })();

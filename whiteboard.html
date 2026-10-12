@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Whiteboard – segmente</title>
 <script src="tema.js"></script>
+<script src="uisize.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -22,7 +23,7 @@
 html,body{margin:0;height:100%}
 body{
   font-family:var(--font);color:var(--ink);background:var(--paper);
-  display:grid;grid-template-columns:118px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
+  display:grid;grid-template-columns:calc(118px * var(--ui,1)) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
   padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
   user-select:none;-webkit-user-select:none;overflow:hidden;
 }
@@ -31,7 +32,6 @@ body.nopal{grid-template-columns:0 minmax(0,1fr)}
 body.bar-bottom{grid-template-rows:minmax(0,1fr) auto}
 .bar-bottom .topbar{grid-row:2;border-bottom:0;border-top:3px solid var(--ink)}
 .bar-bottom .stage{grid-row:1}
-.bar-bottom .menu{top:auto;bottom:calc(100% + 8px)}
 body.nopal .palette{display:none}
 
 /* paleta de elemente */
@@ -59,8 +59,14 @@ body.nopal .palette{display:none}
 
 /* meniul „⋯” */
 .menuwrap{position:relative;margin-left:auto}
-.menu{position:absolute;right:0;top:calc(100% + 8px);z-index:40;min-width:250px;background:var(--panel);border:3px solid var(--ink);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+.menu{position:fixed;overflow:auto;z-index:40;min-width:250px;background:var(--panel);border:3px solid var(--ink);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
 .menu[hidden]{display:none}
+.uisz{padding:4px 6px 6px}
+.uirow{display:flex;justify-content:space-between;font:700 15px var(--font);margin-bottom:4px}
+.uisz input[type=range]{width:100%;height:34px;accent-color:#ffd447;cursor:pointer}
+.uibtns{display:flex;gap:4px}
+.uibtns .btn{flex:1;min-width:0;border:2px solid var(--ink)!important;justify-content:center!important;min-height:38px!important;padding:0 4px!important;font-size:14px!important;width:auto!important}
+
 .menu label.chk,.menu .btn{font:700 18px var(--font);min-height:46px;display:flex;align-items:center;gap:10px;padding:0 12px;border-radius:10px;cursor:pointer;justify-content:flex-start}
 .menu label.chk:hover,.menu .btn:hover{background:var(--paper)}
 .menu .btn{border:0;width:100%}
@@ -102,6 +108,11 @@ svg#cv.mode-erase .ink{pointer-events:stroke}
 dialog{width:min(820px,94vw);border:3px solid var(--ink);border-radius:16px;background:var(--panel);color:var(--ink);padding:16px}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog textarea{width:100%;min-height:300px;font:13px ui-monospace,Menlo,Consolas,monospace;border:2px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);padding:8px}
+/* mărimea uneltelor */
+.topbar{zoom:var(--ui,1)}
+.palette>*{zoom:var(--ui,1)}
+.minibar>*,.pop>*{zoom:var(--ui,1)}
+#bMenu{zoom:var(--ui-menu,1)}
 button:focus-visible,input:focus-visible{outline:4px solid #ffd447;outline-offset:2px}
 @media (max-width:760px){
   body,body.nopal{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr)}
@@ -152,7 +163,17 @@ button:focus-visible,input:focus-visible{outline:4px solid #ffd447;outline-offse
   <button class="btn sq" id="bPos" aria-label="Mută bara de unelte">▼</button>
   <div class="menuwrap">
     <button class="btn sq" id="bMenu" aria-label="Meniu" aria-expanded="false">⋯</button>
-    <div class="menu" id="menu" hidden>
+    
+  </div>
+</div>
+
+<main class="stage" id="stage">
+  <svg id="cv" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Tabla de desen"></svg>
+  <div class="hintbar" id="hint"></div>
+  <div class="minibar" id="bar" hidden></div>
+  <div class="pop" id="pop" hidden></div>
+</main>
+<div class="menu" id="menu" hidden><div class="uisz"><div class="uirow"><b>Mărimea uneltelor</b><b id="uiVal">100%</b></div><input type="range" id="uiRange" min="10" max="150" step="5" value="100" aria-label="Mărimea uneltelor"><div class="uibtns"><button class="btn" data-ui="50">50%</button><button class="btn" data-ui="75">75%</button><button class="btn" data-ui="100">100%</button><button class="btn" data-ui="125">125%</button></div></div><hr>
       <label class="chk"><input type="checkbox" id="cGrid" checked> Grilă (pași pe pătrățele)</label>
       <label class="chk" title="Segmentele se pot lungi cu orice lungime"><input type="checkbox" id="cFree"> Lungime liberă</label>
       <label class="chk"><input type="checkbox" id="cPal" checked> Arată elementele (stânga)</label>
@@ -163,15 +184,6 @@ button:focus-visible,input:focus-visible{outline:4px solid #ffd447;outline-offse
       <hr>
       <button class="btn" id="bTema"></button>
     </div>
-  </div>
-</div>
-
-<main class="stage" id="stage">
-  <svg id="cv" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Tabla de desen"></svg>
-  <div class="hintbar" id="hint"></div>
-  <div class="minibar" id="bar" hidden></div>
-  <div class="pop" id="pop" hidden></div>
-</main>
 
 <dialog id="dlg">
   <h2 style="margin-top:0">Scena (JSON)</h2>
@@ -523,8 +535,8 @@ $("bPos").onclick = () => { pref.bar = pref.bar === "bottom" ? "top" : "bottom";
 
 /* meniul ⋯ */
 function closeMenu() { $("menu").hidden = true; $("bMenu").setAttribute("aria-expanded", "false"); }
-$("bMenu").onclick = e => { e.stopPropagation(); const o = $("menu").hidden; $("menu").hidden = !o; $("bMenu").setAttribute("aria-expanded", String(o)); };
-document.addEventListener("pointerdown", e => { if (!e.target.closest(".menuwrap")) closeMenu(); });
+$("bMenu").onclick = e => { e.stopPropagation(); const o = $("menu").hidden; $("menu").hidden = !o; if (o) UISIZE.place($("menu"), $("bMenu")); $("bMenu").setAttribute("aria-expanded", String(o)); };
+document.addEventListener("pointerdown", e => { if (!e.target.closest(".menuwrap, .menu")) closeMenu(); });
 $("cGrid").onchange = e => { grid = e.target.checked; savePref(); renderSvg(); };
 $("cFree").onchange = e => { free = e.target.checked; savePref(); renderUI(); showHint(free ? "Lungime liberă: segmentele se pot lungi cu orice lungime." : "Lungime pe pătrățele."); };
 $("cPal").onchange = e => { pref.pal = e.target.checked; savePref(); document.body.classList.toggle("nopal", !pref.pal); renderUI(); };
@@ -573,6 +585,8 @@ addEventListener("keydown", e => {
   else if (!typing && e.key === "0") $("zLab").click();
 });
 addEventListener("resize", () => renderUI());
+
+addEventListener("uisize", () => { if (!$("menu").hidden) UISIZE.place($("menu"), $("bMenu")); renderUI(); });
 
 /* ---------- pornire ---------- */
 try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.format === "scena" && Array.isArray(d.elemente)) S = d; } catch (e) {}

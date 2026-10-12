@@ -7,6 +7,8 @@ Aplicație pentru tabla Smart. Pagina principală (`index.html`) este un meniu c
 |---|---|---|
 | Meniu | `index.html` | Pagina principală, cu butoane către celelalte pagini |
 | Whiteboard | `whiteboard.html` | Tablă de desen: segmente, linii, acolade, etichete, creion |
+| Numere | `numere.html` | Axa numerelor (marcaje, salturi, ascunderea numerelor) și blocuri pentru sute, zeci, unități (regrupare, comparare, rotunjire) |
+| Flipchart | `flipchart.html` | Foi de scris și de desenat (segmente, linii, săgeți, acolade, text, forme), cu colțuri pentru foaia următoare / anterioară, bandă de miniaturi, zoom și prezentare |
 | Probleme | `probleme.html` | Rezolvarea problemelor pe metode, cu explicații animate și voce |
 | Administrare | `admin.html` | Crearea problemelor și exportul lui `probleme.js` |
 
@@ -21,6 +23,8 @@ Pagini noi se adaugă în lista `PAGINI` din `index.html`.
 | `motor.js` | Partea comună pentru probleme: desenele pașilor, calcule |
 | `scena.js` | Formatul de scenă și elementele grafice ale whiteboardului |
 | `asistent.js` | Cerculețul asistent și panoul învățătorului (texte pe metode, 3 trepte de ajutor) |
+| `numere.js` | Logica paginii „Numere”: numerele cu litere, gradarea axei, rotunjire, regrupare |
+| `uisize.js` | Mărimea uneltelor (10%–150%), comună paginilor cu bară de unelte |
 | `tema.js` | Comutatorul de temă, comun tuturor paginilor |
 | `.nojekyll` | Fișier gol, cerut de GitHub Pages |
 
@@ -36,6 +40,26 @@ Toate fișierele trebuie să stea în același folder.
 ## Actualizarea problemelor
 Administrare, Exportă probleme.js, Copiază; în GitHub deschideți `probleme.js`, Edit (creionul), lipiți codul, Commit changes.
 Problemele nepublicate încă se pot vedea pe tablă la `probleme.html#ciorna` (același browser).
+
+## Mărimea uneltelor
+Browserul nu poate afla diagonala ecranului, așa că mărimea barelor de unelte se reglează manual: Meniu ⋯ → **Mărimea uneltelor** (glisor de la 10% la 150%, plus butoane rapide 50 / 75 / 100 / 125%). La pagina de probleme, butonul **Aa** din bara de jos. Scara se aplică la eliberarea glisorului, se reține pe fiecare dispozitiv și afectează bara de unelte, mini-bara, ferestrele mici, colțurile flipchartului și asistentul. Butonul de meniu nu coboară sub 50%, ca să poată fi atins oricând. Foaia și obiectele nu se scalează.
+
+## Numere: folosire
+- **Axa numerelor:** intervale 0–10, 0–20, 0–100, 0–1000 sau orice interval între 0 și 1000. Marcaje (atingere pe axă, apoi tragere), salturi (butoane +/− sau tragere de la un număr la altul, cu unealta „Salt”), „Din k în k”, ascunderea numerelor (atingeți o etichetă ca să o dezvăluiți) și vecinii unui număr.
+- **Blocuri:** coloane Sute / Zeci / Unități, cu blocuri sau jetoane. Schimbarea manuală a 10 unități cu 1 zece (și invers), regrupare automată opțională, număr scris cu cifre, descompus și cu litere, informații (par/impar, vecini, rotunjire la zeci și sute), „Pune numărul…”, ascunderea numărului și compararea a două numere.
+- Starea se păstrează cât timp rămâne deschisă fereastra browserului.
+
+## Flipchart: folosire
+- **Scris:** creion, marker transparent și radieră (pe porțiuni sau trăsătură întreagă), cu 8 culori plus orice altă culoare.
+- **Obiecte:** Segment, Linie, Săgeată, Acoladă, Text, Dreptunghi și Elipsă. Se desenează trăgând pe foaie și **unealta rămâne activă**, ca să desenați mai multe la rând. Segmentele se lipesc de capetele celorlalte (și de pătrățele, dacă foaia are fundal cu pătrățele). Liniile se îndreaptă singure când sunt aproape orizontale, verticale sau la 45°.
+- **Alege** (butonul închis la culoare, mereu în bară): atingeți un obiect ca să-l selectați; trageți de mijloc ca să-l mutați și de capete (sau de mânerele galbene) ca să-l redimensionați. O atingere deschide mini-bara (culoare, etichetă, lungime, rotire, umplere, adu în față / în spate, duplicare, ștergere). Trăgând pe foaia goală încercuiți mai multe obiecte (și scris) și le mutați, recolorați sau ștergeți împreună.
+- **Text:** atingeți foaia, scrieți în fereastra mică (și apăsați Gata). Textul gol se șterge.
+- **Radiera** șterge doar scrisul. Din meniul ⋯ se poate activa „Radiera șterge și obiectele”.
+- **Zoom:** ciupire cu două degete, butoanele − / + sau rotița mouse-ului; butonul „Mână” deplasează foaia mărită. Procentul readuce foaia întreagă.
+- **Prezentare** (butonul ⛶): ascunde bara de unelte și banda de foi; ✕ iese din prezentare.
+- **Foi:** colțul din dreapta jos trece la foaia următoare sau adaugă una nouă (pulsează când scrisul ajunge în colț); colțul din stânga jos întoarce foaia. Banda de miniaturi (stânga, jos sau ascunsă) permite saltul direct.
+- Foile se păstrează cât timp rămâne deschisă fereastra browserului, inclusiv la reîncărcarea paginii. Pentru păstrare mai lungă: Meniu ⋯ → Salvează / Încarcă (JSON).
+- Dacă se folosește stiloul, atingerile cu palma sunt ignorate la scris.
 
 ## Asistentul din pagina de probleme
 - Cerculețul 💡 din colț oferă ajutor în 3 trepte: întrebare, indiciu despre instrument, primul pas. Vocea citește textul doar când cineva atinge cerculețul.

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Numere – axa și blocurile</title>
+<script src="tema.js"></script>
+<script src="uisize.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  --paper:#f6fbff; --grid:#cfe3f4; --ink:#1d2b4f; --muted:#52638a;
+  --panel:#ffffff; --line:#b9cde4; --ok:#1f9d55; --bad:#d64545;
+  --cH:#3f6fd1; --cT:#2a9d8f; --cU:#e4572e;
+  --font:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--paper:#16213a;--grid:#243556;--ink:#eef3ff;--muted:#a9b8d8;--panel:#1e2c4d;--line:#3b4f7a}
+}
+:root[data-theme="dark"]{--paper:#16213a;--grid:#243556;--ink:#eef3ff;--muted:#a9b8d8;--panel:#1e2c4d;--line:#3b4f7a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  font-family:var(--font);color:var(--ink);background:var(--paper);
+  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);
+  grid-template-areas:"bar" "sub" "stage";
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+  user-select:none;-webkit-user-select:none;overflow:hidden;
+}
+body.bar-bottom{grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"stage" "sub" "bar"}
+.bar{grid-area:bar;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 10px;background:var(--panel);border-bottom:3px solid var(--ink)}
+body.bar-bottom .bar{border-bottom:0;border-top:3px solid var(--ink)}
+.sub{grid-area:sub;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:6px 10px;background:var(--paper);border-bottom:2px solid var(--line)}
+body.bar-bottom .sub{border-bottom:0;border-top:2px solid var(--line)}
+.stage{grid-area:stage;position:relative;min-height:0;min-width:0;overflow:auto}
+.btn{font:700 17px/1 var(--font);min-height:44px;padding:0 13px;border-radius:11px;border:3px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;gap:6px}
+.btn[aria-pressed="true"]{background:#ffd447;color:#1d2b4f}
+.btn[disabled]{opacity:.4;cursor:default}
+.btn.sq{width:44px;padding:0;font-size:22px}
+.btn.sm{min-height:40px;padding:0 10px;font-size:16px;border-width:2px}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.sep{width:3px;align-self:stretch;background:var(--line);border-radius:2px;margin:2px 1px}
+.grp{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.lab{font:700 16px var(--font);color:var(--muted)}
+label.chk{display:flex;gap:7px;align-items:center;font:700 16px var(--font);cursor:pointer}
+label.chk input{width:22px;height:22px}
+input[type=number],select{font:700 18px var(--font);height:40px;border:2px solid var(--ink);border-radius:10px;background:var(--panel);color:var(--ink);padding:0 8px}
+input[type=number]{width:84px}
+.menuwrap{position:relative;margin-left:auto}
+.menu{position:fixed;overflow:auto;z-index:40;width:270px;background:var(--panel);border:3px solid var(--ink);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+.menu[hidden]{display:none}
+.uisz{padding:4px 6px 6px}
+.uirow{display:flex;justify-content:space-between;font:700 15px var(--font);margin-bottom:4px}
+.uisz input[type=range]{width:100%;height:34px;accent-color:#ffd447;cursor:pointer}
+.uibtns{display:flex;gap:4px}
+.uibtns .btn{flex:1;min-width:0;border:2px solid var(--ink)!important;justify-content:center!important;min-height:38px!important;padding:0 4px!important;font-size:14px!important;width:auto!important}
+
+.menu .btn{border:0;width:100%;justify-content:flex-start}
+.menu .btn:hover{background:var(--paper)}
+.menu hr{border:0;border-top:2px solid var(--line);margin:4px 0;width:100%}
+/* mărimea uneltelor */
+.bar,.sub{zoom:var(--ui,1)}
+#pop>*{zoom:var(--ui,1)}
+#bMenu{zoom:var(--ui-menu,1)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:4px solid #ffd447;outline-offset:2px}
+.toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--ink);color:var(--paper);font:700 18px var(--font);border-radius:12px;padding:6px 16px;z-index:10;pointer-events:none;transition:opacity .4s}
+.toast.off{opacity:0}
+
+/* axa */
+#pAxa{height:100%;min-height:360px}
+svg#axa{width:100%;height:100%;display:block;touch-action:none}
+svg#axa text{font-family:var(--font)}
+.pop{animation:pop .4s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pop{animation:none}}
+
+/* blocuri */
+#pBl{--u:clamp(9px,1.15vw,17px);padding:14px;min-height:100%}
+#pBl.comp{--u:clamp(7px,.85vw,13px)}
+.boards{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.boards.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.board{background:var(--panel);border:3px solid var(--ink);border-radius:18px;padding:12px}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.col{border:3px solid var(--cc);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:8px;background:var(--paper)}
+.col h3{margin:0;text-align:center;font:800 calc(var(--u)*1.7)/1 var(--font);color:var(--cc)}
+.items{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;min-height:calc(var(--u)*22)}
+.bu{width:var(--u);height:var(--u);background:var(--cU);border:1px solid rgba(0,0,0,.4);border-radius:2px;cursor:pointer}
+.bt{display:block;width:calc(var(--u)*10);height:var(--u);background-color:var(--cT);background-image:repeating-linear-gradient(90deg,transparent 0 calc(var(--u) - 1px),rgba(0,0,0,.4) calc(var(--u) - 1px) var(--u));border:1px solid rgba(0,0,0,.45);cursor:pointer}
+.bh{display:block;width:calc(var(--u)*10);height:calc(var(--u)*10);background-color:var(--cH);background-image:repeating-linear-gradient(90deg,transparent 0 calc(var(--u) - 1px),rgba(0,0,0,.35) calc(var(--u) - 1px) var(--u)),repeating-linear-gradient(0deg,transparent 0 calc(var(--u) - 1px),rgba(0,0,0,.35) calc(var(--u) - 1px) var(--u));border:1px solid rgba(0,0,0,.45);cursor:pointer}
+.jt{width:calc(var(--u)*3.4);height:calc(var(--u)*3.4);border-radius:50%;display:grid;place-items:center;font:800 calc(var(--u)*1.25)/1 var(--font);color:#fff;border:3px solid rgba(255,255,255,.75);box-shadow:0 3px 0 rgba(0,0,0,.25);cursor:pointer}
+.ctl{display:flex;justify-content:center;align-items:center;gap:8px}
+.ctl .n{font:800 calc(var(--u)*2)/1 var(--font);min-width:2ch;text-align:center}
+.chg{display:flex;flex-direction:column;gap:5px;min-height:calc(var(--u)*5)}
+.chg .btn{min-height:36px;font-size:14px;border-width:2px;padding:0 6px;line-height:1.1}
+.digits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+.digit{text-align:center;font:800 calc(var(--u)*6)/1 var(--font)}
+.digit.h{color:var(--cH)}.digit.t{color:var(--cT)}.digit.u{color:var(--cU)}
+.expr{text-align:center;font:800 calc(var(--u)*2.3)/1.2 var(--font);margin-top:6px}
+.words{text-align:center;font:700 calc(var(--u)*1.9)/1.25 var(--font);color:var(--muted)}
+.warn{text-align:center;font:700 calc(var(--u)*1.5)/1.3 var(--font);color:var(--cU);margin-top:6px}
+.info{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px}
+.info span{font:700 calc(var(--u)*1.35)/1.2 var(--font);background:var(--paper);border:2px solid var(--line);border-radius:10px;padding:3px 10px}
+.btag{font:800 calc(var(--u)*2)/1 var(--font);margin:0 0 6px;color:var(--muted)}
+.cmpmid{display:grid;place-items:center;margin-top:14px;font:800 calc(var(--u)*5)/1.1 var(--font)}
+.cmpmid small{display:block;font:700 calc(var(--u)*1.6)/1.2 var(--font);color:var(--muted);text-align:center}
+#pop{position:absolute;left:50%;top:60px;transform:translateX(-50%);z-index:30;background:var(--panel);border:3px solid var(--ink);border-radius:16px;padding:12px;box-shadow:0 10px 28px rgba(0,0,0,.3);width:310px}
+#pop[hidden]{display:none}
+#pop .disp{font:800 44px/1.1 var(--font);text-align:center;border:3px solid var(--ink);border-radius:12px;padding:6px;margin-bottom:8px;min-height:62px;background:var(--paper)}
+#pop .kp{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#pop .kp button{height:56px;font:800 26px var(--font);border:3px solid var(--ink);border-radius:12px;background:var(--panel);color:var(--ink);cursor:pointer}
+#pop .row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+#pop .row .btn{flex:1}
+</style>
+</head>
+<body class="bar-top">
+<div class="bar" role="toolbar" id="bar">
+  <a class="btn sq" href="index.html" title="Meniu principal">🏠</a>
+  <div class="grp">
+    <button class="btn" id="tabAxa" aria-pressed="true">Axa numerelor</button>
+    <button class="btn" id="tabBl" aria-pressed="false">Blocuri: sute, zeci, unități</button>
+  </div>
+  <span class="sep"></span>
+  <div class="grp">
+    <button class="btn sq" id="bUndo" aria-label="Înapoi">↶</button>
+    <button class="btn sq" id="bRedo" aria-label="Înainte">↷</button>
+  </div>
+  <button class="btn sq" id="bPos" aria-label="Mută bara">▼</button>
+  <div class="menuwrap">
+    <button class="btn sq" id="bMenu" aria-label="Meniu" aria-expanded="false">⋯</button>
+    
+  </div>
+</div>
+<div class="sub" id="sub"></div>
+<main class="stage" id="stage">
+  <section id="pAxa"><svg id="axa" viewBox="0 0 1600 720" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Axa numerelor"></svg></section>
+  <section id="pBl" hidden><div id="bl"></div></section>
+  <div class="toast off" id="toast" aria-live="polite"></div>
+  <div id="pop" hidden></div>
+</main>
+<div class="menu" id="menu" hidden><div class="uisz"><div class="uirow"><b>Mărimea uneltelor</b><b id="uiVal">100%</b></div><input type="range" id="uiRange" min="10" max="150" step="5" value="100" aria-label="Mărimea uneltelor"><div class="uibtns"><button class="btn" data-ui="50">50%</button><button class="btn" data-ui="75">75%</button><button class="btn" data-ui="100">100%</button><button class="btn" data-ui="125">125%</button></div></div><hr>
+      <button class="btn danger" id="mClear">🗑 Șterge tot de pe această pagină</button>
+      <hr>
+      <button class="btn" id="bTema"></button>
+    </div>
+
+<script src="numere.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const SKEY = "matematica.numere.sesiune", PKEY = "matematica.numere.pref";
+const AXC = ["#e4572e", "#3f6fd1", "#2a9d8f", "#7a5cc7", "#e09f1f", "#c2418b"];
+const X0 = 90, X1 = 1510, YA = 420;
+const newAxa = () => ({ lo: 0, hi: 100, markers: [], arcs: [], hl: [], hide: false, rev: [], nb: false });
+const newBl = () => ({ boards: [{ h: 0, t: 0, u: 0 }, { h: 0, t: 0, u: 0 }], rep: "blocuri", auto: false, comp: false, hide: false, info: true });
+let ST = { tab: "axa", axa: newAxa(), bl: newBl() }, tool = "mark", sel = null, drag = null, hist = [], hi = -1, cmix = 0, padTarget = 0, padVal = "", toastT = null;
+let pref = { bar: "top" };
+try { const q = JSON.parse(localStorage.getItem(PKEY)); if (q) pref = { ...pref, ...q }; } catch (e) {}
+const uid = () => "i" + Math.random().toString(36).slice(2, 9);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const A = () => ST.axa, Bl = () => ST.bl;
+
+/* ---------- istoric și sesiune ---------- */
+const snap = () => JSON.stringify({ axa: ST.axa, bl: ST.bl });
+function save() { try { sessionStorage.setItem(SKEY, JSON.stringify(ST)); } catch (e) {} }
+function commit() {
+  const j = snap(); if (hist[hi] === j) { save(); return; }
+  hist = hist.slice(0, hi + 1); hist.push(j); if (hist.length > 80) hist.shift(); hi = hist.length - 1; save(); updUndo();
+}
+function updUndo() { $("bUndo").disabled = hi <= 0; $("bRedo").disabled = hi >= hist.length - 1; }
+function restore() { const d = JSON.parse(hist[hi]); ST.axa = d.axa; ST.bl = d.bl; if (!A().markers.some(m => m.id === sel)) sel = null; save(); updUndo(); renderAll(); }
+$("bUndo").onclick = () => { if (hi > 0) { hi--; restore(); } };
+$("bRedo").onclick = () => { if (hi < hist.length - 1) { hi++; restore(); } };
+function toast(t) { const e = $("toast"); e.textContent = t; e.classList.remove("off"); clearTimeout(toastT); toastT = setTimeout(() => e.classList.add("off"), 2600); }
+
+/* =====================================================
+   AXA NUMERELOR
+   ===================================================== */
+const xOf = v => X0 + (v - A().lo) / (A().hi - A().lo) * (X1 - X0);
+const vOf = x => Math.max(A().lo, Math.min(A().hi, Math.round(A().lo + (x - X0) / (X1 - X0) * (A().hi - A().lo))));
+function ptA(e) { const p = new DOMPoint(e.clientX, e.clientY).matrixTransform($("axa").getScreenCTM().inverse()); return { x: p.x, y: p.y }; }
+const shown = v => !A().hide || v === A().lo || v === A().hi || A().rev.includes(v);
+function arcMk(r, id, preview) {
+  const x1 = xOf(r.a), x2 = xOf(r.b), h = Math.min(260, Math.max(70, Math.abs(x2 - x1) * .35)), y0 = YA - 16, xm = (x1 + x2) / 2, d = r.b - r.a;
+  const path = `M${x1} ${y0}Q${xm} ${y0 - h} ${x2} ${y0}`;
+  return `<g data-k="a" data-id="${id}"${preview ? "" : ' class="pop"'}><path d="${path}" fill="none" stroke="${r.c}" stroke-width="6" stroke-linecap="round"${preview ? ' stroke-dasharray="14 10" opacity=".7"' : ""} marker-end="url(#ah${r.c.slice(1)})"/><path d="${path}" fill="none" stroke="transparent" stroke-width="34"/><text x="${xm}" y="${y0 - h / 2 - 14}" text-anchor="middle" font-size="34" font-weight="800" fill="${r.c}">${d === 0 ? "" : (d > 0 ? "+" : "−") + Math.abs(d)}</text></g>`;
+}
+function axaSvg(live) {
+  const a = A(), { minor, label } = NUM.ticks(a.lo, a.hi);
+  const cols = [...new Set(a.arcs.map(r => r.c).concat(live ? [live.c] : []))];
+  let s = `<defs>${cols.map(c => `<marker id="ah${c.slice(1)}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`).join("")}</defs>`;
+  s += `<line x1="${X0 - 40}" y1="${YA}" x2="${X1 + 40}" y2="${YA}" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/><path d="M${X1 + 54} ${YA}l-22 -12v24z" fill="var(--ink)"/><path d="M${X0 - 54} ${YA}l22 -12v24z" fill="var(--ink)"/>`;
+  for (let v = Math.ceil(a.lo / minor) * minor; v <= a.hi; v += minor) {
+    const x = xOf(v), major = v % label === 0;
+    s += `<line x1="${x}" y1="${YA - (major ? 24 : 12)}" x2="${x}" y2="${YA + (major ? 24 : 12)}" stroke="var(--ink)" stroke-width="${major ? 4 : 2.5}"/>`;
+  }
+  const labs = new Set([a.lo, a.hi]); for (let v = Math.ceil(a.lo / label) * label; v <= a.hi; v += label) labs.add(v);
+  [...labs].forEach(v => {
+    const x = xOf(v), sh = shown(v);
+    s += `<g data-k="lab" data-v="${v}" style="cursor:pointer"><rect x="${x - 36}" y="${YA + 28}" width="72" height="50" rx="10" fill="${sh ? "transparent" : "var(--panel)"}" stroke="${sh ? "none" : "var(--line)"}" stroke-width="2"${sh ? "" : ' stroke-dasharray="6 5"'}/>${sh ? `<text x="${x}" y="${YA + 66}" text-anchor="middle" font-size="32" font-weight="700" fill="var(--ink)">${v}</text>` : ""}</g>`;
+  });
+  a.hl.forEach(h => { s += `<circle cx="${xOf(h.v)}" cy="${YA}" r="13" fill="${h.c}" stroke="var(--paper)" stroke-width="3"/>`; });
+  const m0 = a.markers.find(m => m.id === sel);
+  if (a.nb && m0) {
+    NUM.vecini(m0.v).filter(v => v >= a.lo && v <= a.hi).forEach(v => { s += `<circle cx="${xOf(v)}" cy="${YA}" r="16" fill="none" stroke="${m0.c}" stroke-width="4" stroke-dasharray="5 5"/><text x="${xOf(v)}" y="${YA + 116}" text-anchor="middle" font-size="28" font-weight="800" fill="${m0.c}">${shown(v) ? v : "?"}</text>`; });
+  }
+  a.arcs.forEach(r => { s += arcMk(r, r.id); });
+  if (live) s += arcMk(live, "live", true);
+  a.markers.forEach(m => {
+    const x = xOf(m.v), on = m.id === sel, show = shown(m.v);
+    s += `<g data-k="m" data-id="${m.id}" style="cursor:grab">${on ? `<circle cx="${x}" cy="${YA}" r="35" fill="none" stroke="#ffd447" stroke-width="7"/>` : ""}<line x1="${x}" y1="${YA - 22}" x2="${x}" y2="${YA - 68}" stroke="${m.c}" stroke-width="5"/><rect x="${x - 44}" y="${YA - 122}" width="88" height="56" rx="14" fill="${m.c}"/><text x="${x}" y="${YA - 82}" text-anchor="middle" font-size="36" font-weight="800" fill="#fff">${show ? m.v : "?"}</text><circle cx="${x}" cy="${YA}" r="22" fill="${m.c}" stroke="var(--paper)" stroke-width="4"/></g>`;
+  });
+  return s;
+}
+function renderAxa(live) { $("axa").innerHTML = axaSvg(live || null); }
+function toggleRev(v) {
+  if (!A().hide) return;
+  const i = A().rev.indexOf(v); i >= 0 ? A().rev.splice(i, 1) : A().rev.push(v); commit(); renderAxa();
+}
+$("axa").addEventListener("pointerdown", e => {
+  const p = ptA(e), t = e.target.closest("[data-k]"), k = t && t.dataset.k;
+  if (k === "lab") { toggleRev(+t.dataset.v); return; }
+  if (tool === "erase") {
+    if (k === "m") { A().markers = A().markers.filter(m => m.id !== t.dataset.id); if (sel === t.dataset.id) sel = null; }
+    else if (k === "a") A().arcs = A().arcs.filter(r => r.id !== t.dataset.id);
+    else return;
+    commit(); renderAll(); return;
+  }
+  $("axa").setPointerCapture(e.pointerId);
+  if (tool === "arc") { const v = vOf(p.x); drag = { k: "arc", a: v, b: v, c: AXC[cmix % AXC.length] }; renderAxa(drag); return; }
+  if (k === "m") { sel = t.dataset.id; drag = { k: "dm", id: sel, moved: false }; renderAll(); return; }
+  if (Math.abs(p.y - YA) < 170) {
+    const m = { id: uid(), v: vOf(p.x), c: AXC[cmix++ % AXC.length] }; A().markers.push(m); sel = m.id; drag = { k: "dm", id: m.id, moved: true }; renderAll(); return;
+  }
+  sel = null; renderAll();
+});
+$("axa").addEventListener("pointermove", e => {
+  if (!drag) return; const p = ptA(e), v = vOf(p.x);
+  if (drag.k === "dm") { const m = A().markers.find(x => x.id === drag.id); if (m && m.v !== v) { m.v = v; drag.moved = true; renderAxa(); } }
+  else if (drag.k === "arc" && drag.b !== v) { drag.b = v; renderAxa(drag); }
+});
+function endAxa() {
+  if (!drag) return; const d = drag; drag = null;
+  if (d.k === "arc") { if (d.a !== d.b) { A().arcs.push({ id: uid(), a: d.a, b: d.b, c: d.c }); cmix++; commit(); } renderAxa(); }
+  else if (d.moved) { commit(); renderAxa(); }
+}
+$("axa").addEventListener("pointerup", endAxa); $("axa").addEventListener("pointercancel", endAxa);
+
+function baseMarker() {
+  let m = A().markers.find(x => x.id === sel) || A().markers[A().markers.length - 1];
+  if (!m) { m = { id: uid(), v: A().lo, c: AXC[cmix++ % AXC.length] }; A().markers.push(m); }
+  sel = m.id; return m;
+}
+function salt(d) {
+  const m = baseMarker(), t = m.v + d;
+  if (t < A().lo || t > A().hi) { toast("Saltul iese de pe axă."); return; }
+  A().arcs.push({ id: uid(), a: m.v, b: t, c: m.c }); m.v = t; commit(); renderAll();
+}
+function numara(k) {
+  const m = baseMarker(); let v = m.v, n = 0; A().hl.push({ v, c: m.c });
+  while (v + k <= A().hi && n < 40) { A().arcs.push({ id: uid(), a: v, b: v + k, c: AXC[(cmix + n) % AXC.length] }); v += k; A().hl.push({ v, c: m.c }); n++; }
+  if (!n) { toast("Nu mai încape niciun salt de " + k + "."); return; }
+  cmix += n; m.v = v; commit(); renderAll();
+}
+function setRange(lo, hi) {
+  if (!Number.isInteger(lo) || !Number.isInteger(hi)) { toast("Scrie două numere întregi."); return; }
+  if (lo < 0 || hi > 1000) { toast("Axa merge de la 0 până la 1000."); return; }
+  if (hi - lo < 5) { toast("Intervalul trebuie să aibă cel puțin 5 unități."); return; }
+  const a = A(); a.lo = lo; a.hi = hi;
+  a.markers.forEach(m => { m.v = Math.max(lo, Math.min(hi, m.v)); });
+  a.arcs = a.arcs.filter(r => r.a >= lo && r.a <= hi && r.b >= lo && r.b <= hi);
+  a.hl = a.hl.filter(h => h.v >= lo && h.v <= hi); a.rev = a.rev.filter(v => v >= lo && v <= hi);
+  commit(); renderAll();
+}
+function subAxa() {
+  const a = A(), span = a.hi - a.lo, tl = (id, t, tt) => `<button class="btn" data-tool="${id}" aria-pressed="${tool === id}" title="${tt}">${t}</button>`;
+  const rg = [[0, 10], [0, 20], [0, 100], [0, 1000]].map(([l, h]) => `<button class="btn sm" data-rg="${l}-${h}" aria-pressed="${a.lo === l && a.hi === h}">${l}–${h}</button>`).join("");
+  const sal = [-100, -10, -5, -2, -1, 1, 2, 5, 10, 100].map(d => `<button class="btn sm" data-salt="${d}"${Math.abs(d) > span ? " disabled" : ""}>${d > 0 ? "+" : "−"}${Math.abs(d)}</button>`).join("");
+  const ks = [2, 3, 4, 5, 10, 20, 50, 100].filter(k => k <= span).map(k => `<option value="${k}">${k}</option>`).join("");
+  return `<div class="grp">${tl("mark", "Marcaj", "Atinge axa ca să pui un marcaj")}${tl("arc", "Salt", "Trage de la un număr la altul")}${tl("erase", "Radieră", "Atinge un marcaj sau un salt ca să-l ștergi")}</div><span class="sep"></span>
+<div class="grp"><span class="lab">Axa:</span>${rg}<span class="lab">de la</span><input type="number" id="rLo" value="${a.lo}" min="0" max="995" aria-label="De la"><span class="lab">până la</span><input type="number" id="rHi" value="${a.hi}" min="5" max="1000" aria-label="Până la"><button class="btn sm" data-act="range">Aplică</button></div><span class="sep"></span>
+<div class="grp"><span class="lab">Salt:</span>${sal}</div>
+<div class="grp"><span class="lab">Din</span><select id="kStep" aria-label="Pasul">${ks}</select><span class="lab">în</span><span class="lab" id="kEcho">…</span><button class="btn sm" data-act="numara">Numără</button></div><span class="sep"></span>
+<div class="grp"><label class="chk"><input type="checkbox" id="cHide"${a.hide ? " checked" : ""}> Ascunde numerele</label><label class="chk"><input type="checkbox" id="cNb"${a.nb ? " checked" : ""}> Vecini</label><button class="btn sm" data-act="cleararcs">Curăță saltul</button></div>`;
+}
+
+/* =====================================================
+   BLOCURI: SUTE, ZECI, UNITĂȚI
+   ===================================================== */
+const COLN = { h: "Sute", t: "Zeci", u: "Unități" };
+function itemsHtml(bi, c, n, rep) {
+  const cls = { h: "bh", t: "bt", u: "bu" }[c];
+  return Array.from({ length: n }, () => rep === "blocuri"
+    ? `<span class="${cls}" data-a="rm" data-b="${bi}" data-c="${c}"></span>`
+    : `<span class="jt" data-a="rm" data-b="${bi}" data-c="${c}" style="background:var(--c${c === "h" ? "H" : c === "t" ? "T" : "U"})">${{ h: 100, t: 10, u: 1 }[c]}</span>`).join("");
+}
+function boardHtml(bi) {
+  const S = Bl(), b = S.boards[bi], v = NUM.valoare(b), can = NUM.esteCanonic(b), hid = S.hide;
+  const col = c => {
+    const up = c === "u" ? `<button class="btn" data-a="up" data-b="${bi}" data-c="u"${b.u >= 10 ? "" : " disabled"}>10 unități → 1 zece</button>`
+      : c === "t" ? `<button class="btn" data-a="up" data-b="${bi}" data-c="t"${b.t >= 10 ? "" : " disabled"}>10 zeci → 1 sută</button><button class="btn" data-a="down" data-b="${bi}" data-c="t"${b.t >= 1 ? "" : " disabled"}>1 zece → 10 unități</button>`
+        : `<button class="btn" data-a="down" data-b="${bi}" data-c="h"${b.h >= 1 ? "" : " disabled"}>1 sută → 10 zeci</button>`;
+    return `<div class="col" style="--cc:var(--c${c === "h" ? "H" : c === "t" ? "T" : "U"})"><h3>${COLN[c]}</h3><div class="items">${itemsHtml(bi, c, b[c], S.rep)}</div><div class="ctl"><button class="btn sq" data-a="sub" data-b="${bi}" data-c="${c}" aria-label="Scoate din ${COLN[c]}"${b[c] ? "" : " disabled"}>−</button><span class="n">${b[c]}</span><button class="btn sq" data-a="add" data-b="${bi}" data-c="${c}" aria-label="Adaugă la ${COLN[c]}">+</button></div><div class="chg">${up}</div></div>`;
+  };
+  const dg = (c, x) => `<div class="digit ${c}">${hid ? "?" : (can ? x : "·")}</div>`;
+  const info = (S.info && !hid && can) ? `<div class="info"><span>${NUM.parImpar(v)}</span>${NUM.vecini(v).length ? `<span>vecini: ${NUM.vecini(v).join(" și ")}</span>` : ""}<span>rotunjit la zeci: ${NUM.rotunjeste(v, 10)}</span><span>rotunjit la sute: ${NUM.rotunjeste(v, 100)}</span></div>` : "";
+  return `<div class="board">${S.comp ? `<div class="btag">${bi ? "B" : "A"}</div>` : ""}<div class="cols">${col("h")}${col("t")}${col("u")}</div>
+<div class="digits">${dg("h", b.h)}${dg("t", b.t)}${dg("u", b.u)}</div>
+<div class="expr">${hid ? "…" : esc(NUM.descompunere(b))}</div><div class="words">${hid ? "…" : esc(NUM.cuvinte(v))}</div>
+${!can && !hid ? `<div class="warn">Schimbă 10 cu 1 ca să vezi cifrele numărului.</div>` : ""}${info}</div>`;
+}
+function renderBl() {
+  const S = Bl(), two = S.comp;
+  $("pBl").classList.toggle("comp", two);
+  let h = `<div class="boards${two ? " two" : ""}">${boardHtml(0)}${two ? boardHtml(1) : ""}</div>`;
+  if (two) { const a = NUM.valoare(S.boards[0]), b = NUM.valoare(S.boards[1]); h += `<div class="cmpmid">${S.hide ? "A ? B" : `${a} ${NUM.cmp(a, b)} ${b}`}<small>${S.hide ? "" : esc(`${NUM.cuvinte(a)} ${NUM.cmp(a, b) === "=" ? "este egal cu" : NUM.cmp(a, b) === "<" ? "este mai mic decât" : "este mai mare decât"} ${NUM.cuvinte(b)}`)}</small></div>`; }
+  $("bl").innerHTML = h;
+}
+function blChange(bi, c, d) {
+  const S = Bl(), b = { ...S.boards[bi] }; b[c] += d;
+  if (b[c] < 0) return;
+  if (NUM.valoare(b) > 1000) { toast("Cel mai mare număr este 1000."); return; }
+  if (b.u > 30 || b.t > 30) { toast("Sunt prea multe blocuri într-o coloană. Schimbă 10 cu 1."); return; }
+  S.boards[bi] = S.auto ? NUM.regrupeaza(b) : b; commit(); renderBl();
+}
+function blSchimba(bi, c, dir) {
+  const b = { ...Bl().boards[bi] };
+  if (dir === "up") { if (c === "u" && b.u >= 10) { b.u -= 10; b.t += 1; } else if (c === "t" && b.t >= 10) { b.t -= 10; b.h += 1; } else return; }
+  else { if (c === "t" && b.t >= 1) { b.t -= 1; b.u += 10; } else if (c === "h" && b.h >= 1) { b.h -= 1; b.t += 10; } else return; }
+  if (b.u > 30 || b.t > 30) { toast("Sunt prea multe blocuri într-o coloană."); return; }
+  Bl().boards[bi] = b; commit(); renderBl();
+}
+function subBl() {
+  const S = Bl();
+  return `<div class="grp"><button class="btn" data-rep="blocuri" aria-pressed="${S.rep === "blocuri"}">Blocuri</button><button class="btn" data-rep="jetoane" aria-pressed="${S.rep === "jetoane"}">Jetoane</button></div><span class="sep"></span>
+<div class="grp"><label class="chk"><input type="checkbox" id="cAuto"${S.auto ? " checked" : ""}> Regrupare automată</label><label class="chk"><input type="checkbox" id="cComp"${S.comp ? " checked" : ""}> Compară două numere</label><label class="chk"><input type="checkbox" id="cHideN"${S.hide ? " checked" : ""}> Ascunde numărul</label><label class="chk"><input type="checkbox" id="cInfo"${S.info ? " checked" : ""}> Informații</label></div><span class="sep"></span>
+<div class="grp"><button class="btn sm" data-act="pad">Pune numărul…</button><button class="btn sm" data-act="blclear">Golește</button></div>`;
+}
+/* tastatura pentru „Pune numărul” */
+function openPad() {
+  padVal = ""; const two = Bl().comp;
+  $("pop").innerHTML = `<div class="disp" id="padDisp">0</div><div class="kp">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button data-k="${n}">${n}</button>`).join("")}<button data-k="back">⌫</button><button data-k="0">0</button><button data-k="clr">C</button></div>
+<div class="row">${two ? `<button class="btn" data-put="0">Pune în A</button><button class="btn" data-put="1">Pune în B</button>` : `<button class="btn" data-put="0">Pune numărul</button>`}<button class="btn" data-put="x">Închide</button></div>`;
+  $("pop").hidden = false;
+}
+$("pop").addEventListener("click", e => {
+  const k = e.target.closest("[data-k]"), p = e.target.closest("[data-put]");
+  if (k) { const x = k.dataset.k; padVal = x === "back" ? padVal.slice(0, -1) : x === "clr" ? "" : (padVal + x).replace(/^0+(?=\d)/, "").slice(0, 4); $("padDisp").textContent = padVal || "0"; }
+  else if (p) {
+    if (p.dataset.put === "x") { $("pop").hidden = true; return; }
+    const n = parseInt(padVal || "0", 10);
+    if (n > 1000) { toast("Numărul poate fi cel mult 1000."); return; }
+    Bl().boards[+p.dataset.put] = NUM.canonic(n); $("pop").hidden = true; commit(); renderBl();
+  }
+});
+
+/* ---------- evenimente comune ---------- */
+function bindSub() {
+  $("sub").onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.tool) { tool = b.dataset.tool; drag = null; $("sub").innerHTML = subAxa(); syncStep(); }
+    else if (b.dataset.rg) { const [l, h] = b.dataset.rg.split("-").map(Number); setRange(l, h); }
+    else if (b.dataset.salt) salt(+b.dataset.salt);
+    else if (b.dataset.rep) { Bl().rep = b.dataset.rep; commit(); renderAll(); }
+    else if (b.dataset.act === "range") setRange(parseInt($("rLo").value, 10), parseInt($("rHi").value, 10));
+    else if (b.dataset.act === "numara") numara(+$("kStep").value);
+    else if (b.dataset.act === "cleararcs") { A().arcs = []; A().hl = []; commit(); renderAll(); }
+    else if (b.dataset.act === "pad") openPad();
+    else if (b.dataset.act === "blclear") { Bl().boards = [{ h: 0, t: 0, u: 0 }, { h: 0, t: 0, u: 0 }]; commit(); renderBl(); }
+  };
+  $("sub").onchange = e => {
+    const t = e.target;
+    if (t.id === "cHide") { A().hide = t.checked; A().rev = []; commit(); renderAxa(); }
+    else if (t.id === "cNb") { A().nb = t.checked; commit(); renderAxa(); }
+    else if (t.id === "kStep") syncStep();
+    else if (t.id === "cAuto") { Bl().auto = t.checked; if (t.checked) { Bl().boards = Bl().boards.map(NUM.regrupeaza); commit(); renderBl(); } else commit(); }
+    else if (t.id === "cComp") { Bl().comp = t.checked; commit(); renderBl(); }
+    else if (t.id === "cHideN") { Bl().hide = t.checked; commit(); renderBl(); }
+    else if (t.id === "cInfo") { Bl().info = t.checked; commit(); renderBl(); }
+  };
+}
+function syncStep() { const k = $("kStep"), e = $("kEcho"); if (k && e) e.textContent = k.value; }
+$("bl").addEventListener("click", e => {
+  const b = e.target.closest("[data-a]"); if (!b || b.disabled) return;
+  const a = b.dataset.a, bi = +b.dataset.b, c = b.dataset.c;
+  if (a === "add") blChange(bi, c, 1); else if (a === "sub" || a === "rm") blChange(bi, c, -1);
+  else if (a === "up") blSchimba(bi, c, "up"); else if (a === "down") blSchimba(bi, c, "down");
+});
+function setTab(t) {
+  ST.tab = t; $("tabAxa").setAttribute("aria-pressed", t === "axa"); $("tabBl").setAttribute("aria-pressed", t === "bl");
+  $("pAxa").hidden = t !== "axa"; $("pBl").hidden = t !== "bl"; $("pop").hidden = true; renderAll();
+}
+$("tabAxa").onclick = () => setTab("axa"); $("tabBl").onclick = () => setTab("bl");
+function renderAll() {
+  $("sub").innerHTML = ST.tab === "axa" ? subAxa() : subBl(); syncStep();
+  if (ST.tab === "axa") renderAxa(); else renderBl();
+}
+/* meniu și aspect */
+function closeMenu() { $("menu").hidden = true; $("bMenu").setAttribute("aria-expanded", "false"); }
+$("bMenu").onclick = e => { e.stopPropagation(); const o = $("menu").hidden; $("menu").hidden = !o; if (o) UISIZE.place($("menu"), $("bMenu")); $("bMenu").setAttribute("aria-expanded", String(o)); };
+document.addEventListener("pointerdown", e => { if (!e.target.closest(".menuwrap, .menu")) closeMenu(); });
+$("mClear").onclick = () => {
+  closeMenu(); if (!confirm("Ștergeți tot de pe această pagină?")) return;
+  if (ST.tab === "axa") { const { lo, hi } = A(); ST.axa = newAxa(); ST.axa.lo = lo; ST.axa.hi = hi; sel = null; } else ST.bl = newBl();
+  commit(); renderAll();
+};
+function applyBar() { document.body.classList.toggle("bar-bottom", pref.bar === "bottom"); $("bPos").textContent = pref.bar === "bottom" ? "▲" : "▼"; }
+$("bPos").onclick = () => { pref.bar = pref.bar === "bottom" ? "top" : "bottom"; try { localStorage.setItem(PKEY, JSON.stringify(pref)); } catch (e) {} applyBar(); };
+
+addEventListener("uisize", () => { if (!$("menu").hidden) UISIZE.place($("menu"), $("bMenu")); });
+
+/* ---------- pornire ---------- */
+try { const d = JSON.parse(sessionStorage.getItem(SKEY)); if (d && d.axa && d.bl) ST = { tab: d.tab || "axa", axa: { ...newAxa(), ...d.axa }, bl: { ...newBl(), ...d.bl } }; } catch (e) {}
+bindSub(); applyBar(); commit(); setTab(ST.tab);
+</script>
+</body>
+</html>
